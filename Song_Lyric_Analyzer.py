@@ -18,6 +18,7 @@ class SongLyricAnalyzer(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title_font = tkfont.Font(family='Times New Roman', size=18, weight="bold")
+        self.medium_font = tkfont.Font(family='Times New Roman', size=12, weight="bold")
 
         # the container is where we'll stack a bunch of frames
         # on top of each other, then the one we want visible
@@ -70,6 +71,9 @@ class StartPage(tk.Frame):
             button4 = tk.Button(self, text="Find Keyword Count In A Song",
                                 command=lambda: [update_PageThree(), controller.show_frame("PageThree")])
             button4.pack()
+        button5 = tk.Button(self, text="Exit Program",
+                            command=lambda: [exit(0)])
+        button5.pack()
 
         def select_file():
             global file_path
@@ -154,18 +158,21 @@ class PageTwo(tk.Frame):  # Select Bad Song Indices
         tk.Frame.__init__(self, parent)
         self.controller = controller
         label = tk.Label(self, text="Select Bad Song Indices", font=controller.title_font)
-        label.pack(side="top", fill="x", pady=10)
+        label.grid(row=0, column=1)
         button = tk.Button(self, text="Confirm",
                            command=lambda: [get_bad_indices(), controller.show_frame("StartPage")])
-        button.pack()
+        button.grid(row=1, column=1)
         button1 = tk.Button(self, text="Cancel",
                            command=lambda: [controller.show_frame("StartPage")])
-        button1.pack()
-        scrollbar = tk.Scrollbar(self)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        button1.grid(row=2, column=1)
+        checklist = tk.Text(self, height = 20, width=55, cursor="arrow")
+        checklist.grid(row=3, column=1, rowspan=10)
+        scrollbar = tk.Scrollbar(self, orient="vertical")
+        scrollbar.grid(row=3, column=2, rowspan=10, sticky="NS")
+        instructions = "Checking off a song will\nhide it from lists in\nother lyric analysis tools\nto prevent cluttered\n song lists"
+        label = tk.Label(self, text=instructions)
+        label.grid(row=5, column=0)
 
-        checklist = tk.Text(self, width=55)
-        checklist.pack()
 
         if data_is_loaded:
             list_of_songs = printAllSongsFromJSON(data)
@@ -201,27 +208,28 @@ class PageThree(tk.Frame):  # Find Keyword Count In Song
         tk.Frame.__init__(self, parent)
         self.controller = controller
         button = tk.Button(self, text="Go to the start page", command=lambda: controller.show_frame("StartPage"))
-        button.pack(side="top", anchor=NW)
+        button.grid(row=0, column=0)
         button1 = tk.Button(self, text="Search", command=lambda: [conduct_count()])
-        button1.pack(anchor=NE)
+        button1.grid(row=0, column=5)
         message = tk.StringVar()
         label = tk.Label(self, text="Find Keyword Count In Song", font=controller.title_font)
-        label.pack(side="top", fill="x", pady=10)
-        label = tk.Label(self, textvariable=message, font=controller.title_font)
-        label.pack(side="top")
+        label.grid(row=0, column=3)
+        label = tk.Label(self, textvariable=message, font=controller.medium_font)
+        label.grid(row=6, column=3)
         label1 = tk.Label(self, text="Enter keyword you want to search and count")
-        label1.pack(side="top", fill="x", pady=10)
+        label1.grid(row=2, column=3)
         keyword_var = tk.StringVar()
         entry = tk.Entry(self, width=15, textvariable=keyword_var)
-        entry.pack()
+        entry.insert(END, "love")
+        entry.grid(row=3, column=3)
         label2 = tk.Label(self, text="Select the song you want to search in")
-        label2.pack(side="top", fill="x", pady=10)
+        label2.grid(row=4, column=3)
 
         # Make scrollable so user can select ONE song
-        scrollbar = tk.Scrollbar(self)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        checklist = tk.Text(self, width=55)
-        checklist.pack()
+        checklist = tk.Text(self, height=15, width=55, cursor="arrow", bg = '#F0F0F0')
+        checklist.grid(row=5, column=3)
+        scrollbar = tk.Scrollbar(self, orient="vertical")
+        scrollbar.grid(row=5, column=4, sticky='NS')
         radio_group = tk.IntVar(value=0)
         if data_is_loaded:
             list_of_songs = printGoodSongsFromJSON(data, bad_song_indices)
@@ -237,9 +245,10 @@ class PageThree(tk.Frame):  # Find Keyword Count In Song
             # disable the widget so users can't insert text into it
             checklist.configure(state="disabled")
 
+
         def conduct_count():
             keyword_count = findKeywordCountInSong(data, keyword_var.get(), radio_group.get())
-            message.set("The number of times "+ keyword_var.get() + " is said in " + data['songs'][radio_group.get()]['title'] + " is: " + str(keyword_count))
+            message.set("The number of times \""+ keyword_var.get() + "\" is said in \n" + data['songs'][radio_group.get()]['title'] + " is: " + str(keyword_count))
 
 
 
