@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import font as tkfont, font
 from tkinter.filedialog import askopenfilename
@@ -29,7 +30,7 @@ class SongLyricAnalyzer(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in (StartPage, PageOne, PageTwo, PageThree):
+        for F in (StartPage, PageOne, PageTwo, PageThree, PageFour, ViewLyrics):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -58,22 +59,28 @@ class StartPage(tk.Frame):
         if invalid_file:
             label = tk.Label(self, text="Please select a valid json file", font=controller.title_font)
             label.pack(side="top", fill="x", pady=10)
-        button1 = tk.Button(self, text="Select File", command=lambda: [select_file()])
+        button1 = tk.Button(self, text="Select File", width=30,command=lambda: [select_file()])
         button1.pack()
-        button = tk.Button(self, text="Quick Select File (For testing purposes)", command=lambda: [quick_select_file()])
+        button = tk.Button(self, text="Quick Select File (For testing purposes)", width=30, command=lambda: [quick_select_file()])
         button.pack()
         if data_is_loaded:
-            button2 = tk.Button(self, text="View All Songs From JSON", command=lambda: [update_PageOne(), controller.show_frame("PageOne")])
+            button2 = tk.Button(self, text="View All Songs From JSON", width=30,command=lambda: [update_PageOne(), controller.show_frame("PageOne")])
             button2.pack()
-            button3 = tk.Button(self, text="Select Songs To Ignore",
+            button2 = tk.Button(self, text="View Song Lyrics", width=30,
+                                command=lambda: [update_ViewLyrics(), controller.show_frame("ViewLyrics")])
+            button2.pack()
+            button3 = tk.Button(self, text="Select Songs To Ignore",width=30,
                                 command=lambda: [update_PageTwo(), controller.show_frame("PageTwo")])
             button3.pack()
-            button4 = tk.Button(self, text="Find Keyword Count In A Song",
+            button4 = tk.Button(self, text="Find Keyword Count In A Song",width=30,
                                 command=lambda: [update_PageThree(), controller.show_frame("PageThree")])
             button4.pack()
-        button5 = tk.Button(self, text="Exit Program",
+            button5 = tk.Button(self, text="Find Keyword Count In All Songs",width=30,
+                                command=lambda: [update_PageFour(), controller.show_frame("PageFour")])
+            button5.pack()
+        exit_button = tk.Button(self, text="Exit Program",width=30,
                             command=lambda: [exit(0)])
-        button5.pack()
+        exit_button.pack()
 
         def select_file():
             global file_path
@@ -114,6 +121,16 @@ class StartPage(tk.Frame):
             app.frames["PageThree"].destroy()
             app.frames["PageThree"] = PageThree(parent, controller)
             app.frames["PageThree"].grid(row=0, column=0, sticky="nsew")
+
+        def update_PageFour():
+            app.frames["PageFour"].destroy()
+            app.frames["PageFour"] = PageFour(parent, controller)
+            app.frames["PageFour"].grid(row=0, column=0, sticky="nsew")
+
+        def update_ViewLyrics():
+            app.frames["ViewLyrics"].destroy()
+            app.frames["ViewLyrics"] = ViewLyrics(parent, controller)
+            app.frames["ViewLyrics"].grid(row=0, column=0, sticky="nsew")
 
         def quick_select_file():
             global file_path
@@ -157,23 +174,42 @@ class PageTwo(tk.Frame):  # Select Bad Song Indices
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
+        label = tk.Label(self, text="Presets:", font=controller.medium_font)
+        label.grid(row=0, column=0, columnspan=2)
+        # Show presets, if any
+        there_are_existing_presets, loaded_presets = load_existing_presets()
+        if there_are_existing_presets:
+            for i in range(len(loaded_presets['presets'])):
+                button = tk.Button(self, text=loaded_presets['presets'][i]['name'], command=lambda name=i: [set_bad_song_indices(name), controller.show_frame("StartPage")])
+                button.grid(row=i+1, column=0)
+                button = tk.Button(self, text="Del " + loaded_presets['presets'][i]['name'],command=lambda name=-i: [delete_preset(name), update_PageTwo()])
+                button.grid(row=i+1, column=1)
         label = tk.Label(self, text="Select Bad Song Indices", font=controller.title_font)
-        label.grid(row=0, column=1)
+        label.grid(row=0, column=2)
+        button = tk.Button(self, text="Confirm and make preset",
+                           command=lambda: [get_bad_indices_and_save_to_file(), controller.show_frame("StartPage")])
+        button.grid(row=3, column=3)
+        label = tk.Label(self, text="Make a new Preset")
+        label.grid(row=0, column=3)
+        label = tk.Label(self, text="Name of preset: ")
+        label.grid(row=1, column=3)
+        preset_name_var = tk.StringVar()
+        entry = tk.Entry(self, width=15, textvariable=preset_name_var)
+        entry.insert(END, "Khalid")
+        entry.grid(row=2, column=3)
         button = tk.Button(self, text="Confirm",
                            command=lambda: [get_bad_indices(), controller.show_frame("StartPage")])
-        button.grid(row=1, column=1)
+        button.grid(row=2, column=2)
         button1 = tk.Button(self, text="Cancel",
                            command=lambda: [controller.show_frame("StartPage")])
-        button1.grid(row=2, column=1)
+        button1.grid(row=3, column=2)
         checklist = tk.Text(self, height = 20, width=55, cursor="arrow")
-        checklist.grid(row=3, column=1, rowspan=10)
+        checklist.grid(row=4, column=2, rowspan=10, columnspan=2)
         scrollbar = tk.Scrollbar(self, orient="vertical")
-        scrollbar.grid(row=3, column=2, rowspan=10, sticky="NS")
-        instructions = "Checking off a song will\nhide it from lists in\nother lyric analysis tools\nto prevent cluttered\n song lists"
+        scrollbar.grid(row=4, column=4, rowspan=10, sticky="NSW")
+        instructions = "Checking off a song will\nhide it from lists in\nother lyric analysis tools\nto prevent cluttered\n song lists and to\nignore songs in searches"
         label = tk.Label(self, text=instructions)
-        label.grid(row=5, column=0)
-
-
+        label.grid(row=6, column=0, columnspan=2)
         if data_is_loaded:
             list_of_songs = printAllSongsFromJSON(data)
             button_statuses = []
@@ -190,7 +226,6 @@ class PageTwo(tk.Frame):  # Select Bad Song Indices
 
             checklist.config(yscrollcommand=scrollbar.set, font=bolded)
             scrollbar.config(command=checklist.yview)
-
             # disable the widget so users can't insert text into it
             checklist.configure(state="disabled")
 
@@ -201,6 +236,60 @@ class PageTwo(tk.Frame):  # Select Bad Song Indices
                 if button_statuses[i].get() == 1:  # If 1, then it's a bad song index
                     print(i, "was checked")
                     bad_song_indices.append(i)
+
+        def get_bad_indices_and_save_to_file():
+            global bad_song_indices
+            bad_song_indices = []
+            for i in range(len(button_statuses)):
+                if button_statuses[i].get() == 1:  # If 1, then it's a bad song index
+                    print(i, "was checked")
+                    bad_song_indices.append(i)
+            # now save to file
+            there_are_existing_presets, loaded_presets = load_existing_presets()
+            # if there aren't any existing profiles in profiles.json
+            if there_are_existing_presets == False:
+                # Must create the json object from scratch first since it does not exist yet
+                data = {}
+                data['presets'] = []
+
+                # Now append to profiles.json
+                data['presets'].append({
+                    'name': preset_name_var.get(),
+                    'bad_song_indices': bad_song_indices
+                })
+                with open('presets.json', 'w') as outfile:
+                    json.dump(data, outfile, indent=2, sort_keys=False)
+
+            # else if there are already existing profiles in profiles.json
+            elif there_are_existing_presets == True:
+                # Simply append the new profile data to the profiles.json file
+                loaded_presets['presets'].append({
+                    'name': preset_name_var.get(),
+                    'bad_song_indices': bad_song_indices
+                })
+                with open('presets.json', 'w') as outfile:
+                    json.dump(loaded_presets, outfile, indent=2, sort_keys=False)
+
+        def set_bad_song_indices(name):
+            #name is index of preset in json
+            global bad_song_indices
+            bad_song_indices = loaded_presets["presets"][name]["bad_song_indices"]
+            print("bad song indices is now:", bad_song_indices)
+
+        def update_PageTwo():  # Removes need for refresh button
+            app.frames["PageTwo"].destroy()
+            app.frames["PageTwo"] = PageTwo(parent, controller)
+            app.frames["PageTwo"].grid(row=0, column=0, sticky="nsew")
+
+        def delete_preset(index):
+            with open('presets.json', 'r') as outfile:
+                loaded_presets = json.load(outfile)
+
+            del loaded_presets["presets"][index]
+            os.remove("presets.json")
+            with open("presets.json", "w") as file:
+                json.dump(loaded_presets, file, indent=2, sort_keys=False)
+            # controller.show_frame("PageEleven")
 
 
 class PageThree(tk.Frame):  # Find Keyword Count In Song
@@ -236,8 +325,9 @@ class PageThree(tk.Frame):  # Find Keyword Count In Song
             bolded = font.Font(weight='bold')
             for i in range(len(list_of_songs)):
                 radiobutton = Radiobutton(checklist, text=list_of_songs[i], variable=radio_group, value=i)
-                checklist.window_create("end", window=radiobutton)
-                checklist.insert("end", "\n")
+                if i not in bad_song_indices:
+                    checklist.window_create("end", window=radiobutton)
+                    checklist.insert("end", "\n")
 
             checklist.config(yscrollcommand=scrollbar.set, font=bolded)
             scrollbar.config(command=checklist.yview)
@@ -251,9 +341,93 @@ class PageThree(tk.Frame):  # Find Keyword Count In Song
             message.set("The number of times \""+ keyword_var.get() + "\" is said in \n" + data['songs'][radio_group.get()]['title'] + " is: " + str(keyword_count))
 
 
+class PageFour(tk.Frame):  # Find Keyword Count In All Songs
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+        button = tk.Button(self, text="Go to the start page", command=lambda: controller.show_frame("StartPage"))
+        button.grid(row=0, column=0)
+        button1 = tk.Button(self, text="Search", command=lambda: [conduct_count()])
+        button1.grid(row=0, column=5)
+        message = tk.StringVar()
+        label = tk.Label(self, text="Find Keyword Count In All Songs", font=controller.title_font)
+        label.grid(row=0, column=3)
+        label = tk.Label(self, textvariable=message, font=controller.medium_font)
+        label.grid(row=6, column=3)
+        label1 = tk.Label(self, text="Enter keyword you want to search and count")
+        label1.grid(row=2, column=3)
+        keyword_var = tk.StringVar()
+        entry = tk.Entry(self, width=15, textvariable=keyword_var)
+        entry.insert(END, "love")
+        entry.grid(row=3, column=3)
+        label2 = tk.Label(self, text="List of songs that will be included in the count")
+        label2.grid(row=4, column=3)
+
+        # Listbox and scrollbar to show songs program will count in
+        listbox = Listbox(self, width=55)
+        listbox.grid(row=5, column=3)
+        scrollbar = Scrollbar(self)
+        scrollbar.grid(row=5, column=4, sticky='NS')
+        if data_is_loaded:
+            list_of_songs = printGoodSongsFromJSON(data, bad_song_indices)
+            for i in range(len(list_of_songs)):
+                listbox.insert(END, str(i) + ": " + list_of_songs[i])
+
+        listbox.config(yscrollcommand=scrollbar.set)
+        bolded = font.Font(weight='bold')
+        listbox.config(font=bolded)
+        scrollbar.config(command=listbox.yview)
+
+
+        def conduct_count():
+            keyword_count = findKeywordCountInAllSongs(data, keyword_var.get(), bad_song_indices)
+            message.set("The number of times \""+ keyword_var.get() + "\" is said is: " + str(keyword_count))
+
+class ViewLyrics(tk.Frame):  # View Song Lyrics
+    def __init__(self, parent, controller):
+        def selected_item(event):
+            print("test")
+            selected_song.set(listbox1.get(listbox1.curselection()))
+            song_index = listbox1.get(0, "end").index(selected_song.get())
+            text.delete(1.0, "end")
+            text.insert(END, data['songs'][song_index]['lyrics'])
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+        button = tk.Button(self, text="Go to the start page", command=lambda: controller.show_frame("StartPage"))
+        button.grid(row=0, column=0)
+        label = tk.Label(self, text="View Song Lyrics", font=controller.title_font)
+        label.grid(row=0, column=1, columnspan=2)
+        label1 = tk.Label(self, text="Click a song to see its lyrics")
+        label1.grid(row=1, column=0)
+        listbox1 = Listbox(self, height=32, width=30)
+        listbox1.grid(row=2, column=0)
+        scrollbar1 = Scrollbar(self)
+        scrollbar1.grid(row=2, column=1, sticky="NSW")
+        if data_is_loaded:
+            list_of_songs = printAllSongsFromJSON(data)
+            for i in range(len(list_of_songs)):
+                listbox1.insert(END, str(i) + ": " + list_of_songs[i])
+        selected_song = tk.StringVar()
+        selected_song.set("No selection yet")
+        label = tk.Label(self, textvariable=selected_song, font=controller.title_font)
+        label.grid(row=1, column=2)
+        listbox1.config(yscrollcommand=scrollbar1.set)
+        listbox1.bind('<<ListboxSelect>>', selected_item)
+        bolded = font.Font(weight='bold')
+        #listbox1.config(font=bolded)
+        scrollbar1.config(command=listbox1.yview)
+
+        # The Text widget to display the lyrics in
+        text = Text(self, height=32, width=70)
+        text.grid(row=2, column=2)
+        scrollbar2 = Scrollbar(self)
+        scrollbar2.grid(row=2, column=3, sticky="NSW")
+        scrollbar2.config(command=text.yview)
+        text['yscrollcommand'] = scrollbar2.set
 
 if __name__ == "__main__":
     app = SongLyricAnalyzer()
     app.title('Song Lyric Analyzer')
     app.geometry("800x600")
     app.mainloop()
+
