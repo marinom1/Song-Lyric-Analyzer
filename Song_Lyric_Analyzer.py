@@ -150,12 +150,12 @@ class PageOne(tk.Frame):  # View All Songs From JSON
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = tk.Label(self, text="List of songs in json")
-        label.pack(side="top", fill="x", pady=10)
-        listbox = Listbox(self, width=55)
-        listbox.pack(side=LEFT, fill=BOTH)
+        label = tk.Label(self, text="List of songs in json", font=controller.title_font)
+        label.grid(row=0, column=1, columnspan=2)
+        listbox = Listbox(self, height= 20, width=55)
+        listbox.grid(row=1, column=1, columnspan=2)
         scrollbar = Scrollbar(self)
-        scrollbar.pack(side=LEFT, fill=BOTH)
+        scrollbar.grid(row=1, column=3, sticky="NSW")
         if data_is_loaded:
             list_of_songs = printAllSongsFromJSON(data)
             for i in range(len(list_of_songs)):
@@ -167,7 +167,7 @@ class PageOne(tk.Frame):  # View All Songs From JSON
         scrollbar.config(command=listbox.yview)
 
         button = tk.Button(self, text="Go to the start page", command=lambda: controller.show_frame("StartPage"))
-        button.pack()
+        button.grid(row=0, column=0, sticky="NW")
 
 
 class PageTwo(tk.Frame):  # Select Bad Song Indices
@@ -297,7 +297,7 @@ class PageThree(tk.Frame):  # Find Keyword Count In Song
         tk.Frame.__init__(self, parent)
         self.controller = controller
         button = tk.Button(self, text="Go to the start page", command=lambda: controller.show_frame("StartPage"))
-        button.grid(row=0, column=0)
+        button.grid(row=0, column=0, sticky="NW")
         button1 = tk.Button(self, text="Search", command=lambda: [conduct_count()])
         button1.grid(row=0, column=5)
         message = tk.StringVar()
@@ -346,7 +346,7 @@ class PageFour(tk.Frame):  # Find Keyword Count In All Songs
         tk.Frame.__init__(self, parent)
         self.controller = controller
         button = tk.Button(self, text="Go to the start page", command=lambda: controller.show_frame("StartPage"))
-        button.grid(row=0, column=0)
+        button.grid(row=0, column=0, sticky="NW")
         button1 = tk.Button(self, text="Search", command=lambda: [conduct_count()])
         button1.grid(row=0, column=5)
         message = tk.StringVar()
@@ -386,15 +386,23 @@ class PageFour(tk.Frame):  # Find Keyword Count In All Songs
 class ViewLyrics(tk.Frame):  # View Song Lyrics
     def __init__(self, parent, controller):
         def selected_item(event):
-            print("test")
             selected_song.set(listbox1.get(listbox1.curselection()))
             song_index = listbox1.get(0, "end").index(selected_song.get())
+            text.configure(state="normal")
             text.delete(1.0, "end")
             text.insert(END, data['songs'][song_index]['lyrics'])
+            text.configure(state="disabled")
+
+        def do_popup(event):
+            try:
+                m.tk_popup(event.x_root, event.y_root)
+            finally:
+                m.grab_release()
+
         tk.Frame.__init__(self, parent)
         self.controller = controller
         button = tk.Button(self, text="Go to the start page", command=lambda: controller.show_frame("StartPage"))
-        button.grid(row=0, column=0)
+        button.grid(row=0, column=0, sticky="NW")
         label = tk.Label(self, text="View Song Lyrics", font=controller.title_font)
         label.grid(row=0, column=1, columnspan=2)
         label1 = tk.Label(self, text="Click a song to see its lyrics")
@@ -413,17 +421,22 @@ class ViewLyrics(tk.Frame):  # View Song Lyrics
         label.grid(row=1, column=2)
         listbox1.config(yscrollcommand=scrollbar1.set)
         listbox1.bind('<<ListboxSelect>>', selected_item)
-        bolded = font.Font(weight='bold')
-        #listbox1.config(font=bolded)
         scrollbar1.config(command=listbox1.yview)
 
         # The Text widget to display the lyrics in
-        text = Text(self, height=32, width=70)
+        genius_font=tkfont.Font(family="Programme", size=14)
+        text = Text(self, wrap="word", height=17, width=52)
         text.grid(row=2, column=2)
         scrollbar2 = Scrollbar(self)
         scrollbar2.grid(row=2, column=3, sticky="NSW")
         scrollbar2.config(command=text.yview)
         text['yscrollcommand'] = scrollbar2.set
+        text.configure(font=genius_font, spacing1=4, spacing2=4, spacing3=4)
+        # Right click menu to copy
+        m = Menu(self, tearoff=0)
+        m.add_command(label="Copy")
+        text.bind("<Button-3>", do_popup)
+
 
 if __name__ == "__main__":
     app = SongLyricAnalyzer()
