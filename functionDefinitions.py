@@ -1,3 +1,5 @@
+import json
+import os
 from collections import Counter
 import re
 
@@ -31,14 +33,17 @@ def printBadSongsFromJSON(data, badSongIndices):
 
 
 def printGoodSongsFromJSON(data, badSongIndices):
-    """Prints all songs that are not on the badSongIndices list"""
+    """Prints all songs that are not on the badSongIndices list. Returns list of song names that are good songs"""
     totalGoodSongs = 0
+    list_of_good_songs = []
     for i in range(len(data['songs'])):
         if i in badSongIndices:
             continue
         print(i, data['songs'][i]['title'])
         totalGoodSongs = totalGoodSongs + 1
+        list_of_good_songs.append(data['songs'][i]['title'])
     print("There are", totalGoodSongs, "good songs")
+    return list_of_good_songs
 
 def removePunctuation(string):
     """Removes punctuation from a string
@@ -104,7 +109,7 @@ def findKeywordCountInSong(data, keyword, songIndex):
     if lyrics is not None:
         lyrics = lyrics.lower()
         lyrics = removePunctuation(lyrics)
-        lyrics = lyrics.replace('\u200b', '') #catch weird bug where \u200b was showing up in some keywords
+        lyrics = lyrics.replace('\u200b', '')  # catch weird bug where \u200b was showing up in some keywords
         lyrics = lyrics.split()
         # print(songIndex, "Currently looking at: ", data['songs'][songIndex]['title'])
         for a in range(len(lyrics)):  # Loop through the current song
@@ -357,7 +362,7 @@ def findPhraseCountInSong(data, phrase, songIndex):
         stringOfWords = stringOfWords.lower()
         stringOfWords = removeHeadersFromLyrics(stringOfWords)
         stringOfWords = removePunctuation(stringOfWords)
-        stringOfWords = stringOfWords.replace('\u2005', ' ') #This catches weird bug I randomly found where spaces werent actually spaces...
+        stringOfWords = stringOfWords.replace('\u2005', ' ') # This catches weird bug I randomly found where spaces werent actually spaces...
         #print("lyrics should be good to go here:", stringOfWords)
         print(repr(stringOfWords))
         print(songIndex, "Currently looking at: ", data['songs'][songIndex]['title'])
@@ -688,17 +693,21 @@ def getOnlyArtistLyricsInSong(data, songIndex, artistName):
     lyrics = data['songs'][songIndex]['lyrics']
     # print("lyrics here is:",lyrics,"from song:",data['songs'][songIndex]['title'])
     if ': ' + artistName not in lyrics:  # If there are no other features on the song, headers will not say artist name
-        while (13 == 13):
-            startOfHeader = lyrics.find('[', indexPointer, len(lyrics))
-            endOfHeader = lyrics.find(']', startOfHeader, len(lyrics))
-            headerToRemove = lyrics[startOfHeader:endOfHeader + 1]
-            # print("The header to remove is:",headerToRemove)
-            lyrics = lyrics.replace(headerToRemove, '')
-            # print(lyrics)
-            if '[' not in lyrics:  # if no more headers to remove
-                # print("No more headers to remove.")
+        if artistName == data['songs'][songIndex]['artist']:  # Artist name does not match Genius song owner, return error because user inputted an invalid artist name
+            print(artistName == data['songs'][songIndex]['artist'])
+            while (13 == 13):
+                startOfHeader = lyrics.find('[', indexPointer, len(lyrics))
+                endOfHeader = lyrics.find(']', startOfHeader, len(lyrics))
+                headerToRemove = lyrics[startOfHeader:endOfHeader + 1]
+                # print("The header to remove is:",headerToRemove)
+                lyrics = lyrics.replace(headerToRemove, '')
                 # print(lyrics)
-                return lyrics
+                if '[' not in lyrics:  # if no more headers to remove
+                    # print("No more headers to remove.")
+                    # print(lyrics)
+                    return lyrics
+        else:
+            print("Invalid artist name inputted by user")
 
     else:  # The song has 1 or more features
         while (13 == 13):
@@ -824,11 +833,40 @@ def getListOfMostCommonTwoWordPhrasesInAllSongs(data, badSongIndices):
     print("Checked ", songCount, "songs")
     return z
 
-
-
-
-
-
-
     return cumulativeListOfPhrases
 
+
+# GUI Functions
+def load_existing_presets():
+    """First, this function will ensure that the file presets.json exists. If it doesn't, then we create it.
+    Then, this function checks if there are already existing presets. If there are, we load them into program.
+    If there are no existing presets, then make the boolean existing_presets False
+    Returns
+    -------
+    there_are_existing_presets : bool
+        boolean that tells us if there are existing presets already in presets.json
+    loaded_presets : json
+        existing data from presets.json if there are existing presets, empty dict if there are none
+    """
+
+    # Check if profiles.json exists first
+    if os.path.isfile("presets.json"):
+        print("Found presets.json - Loading presets Now")
+    else:
+        print("presets.json doesn't exist - Creating presets.json")
+        f = open("presets.json", "w")
+        f.write("")  # dont think this is needed anymore
+
+    if os.stat("presets.json").st_size == 0:  # if presets.json is empty (A.K.A no existing profiles)
+        there_are_existing_presets = False
+    else:
+        there_are_existing_presets = True
+
+    if (there_are_existing_presets):
+        with open('presets.json') as json_file:
+            loaded_presets = json.load(json_file)
+
+    else:  # No presets made previously
+        loaded_presets = {}
+
+    return there_are_existing_presets, loaded_presets

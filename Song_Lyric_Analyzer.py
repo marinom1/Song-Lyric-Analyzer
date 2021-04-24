@@ -57,7 +57,6 @@ class StartPage(tk.Frame):
         label.pack(side="top", fill="x", pady=10)
         label1 = tk.Label(self, text=file_name, font=controller.title_font)
         label1.pack(side="top", fill="x", pady=10)
-        number_of_bad_songs = 0
         if bad_song_indices:
             number_of_bad_songs = len(bad_song_indices)
             label2 = tk.Label(self, text="You selected " + str(number_of_bad_songs) + " songs to ignore", font=controller.title_font)
@@ -115,7 +114,7 @@ class StartPage(tk.Frame):
                 invalid_file = True
                 update_StartPage()
 
-        def update_StartPage():  # Removes need for refresh button
+        def update_StartPage():
             app.frames["StartPage"].destroy()
             app.frames["StartPage"] = StartPage(parent, controller)
             app.frames["StartPage"].grid(row=0, column=0, sticky="nsew")
@@ -155,7 +154,7 @@ class StartPage(tk.Frame):
             app.frames["FindPhraseCountInSong"] = FindPhraseCountInSong(parent, controller)
             app.frames["FindPhraseCountInSong"].grid(row=0, column=0, sticky="nsew")
 
-        def quick_select_file():
+        def quick_select_file():  # Used to quickly test features, automatically picks khalid json
             global file_path
             global file_name
             global data
@@ -491,7 +490,7 @@ class FindKeyWordCountInSongByArtist(tk.Frame):
         label1.grid(row=2, column=3)
         keyword_var = tk.StringVar()
         entry1 = tk.Entry(self, width=15, textvariable=keyword_var)
-        entry1.insert(END, "time")
+        entry1.insert(END, "alive")
         entry1.grid(row=3, column=3)
         label2 = tk.Label(self, text="Enter the Artist's name")
         label2.grid(row=4, column=3)
