@@ -7,14 +7,6 @@ import ntpath
 import json
 from functionDefinitions import *
 
-# Global Variables
-file_path = ""
-file_name = ""
-data = ""
-data_is_loaded = False
-invalid_file = False
-bad_song_indices = []
-
 class SongLyricAnalyzer(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -31,7 +23,7 @@ class SongLyricAnalyzer(tk.Tk):
 
         self.frames = {}
         for F in (StartPage, ViewAllSongsFromJSON, SelectSongsToIgnore, FindKeywordCountInSong, FindKeywordCountInAllSongs, ViewLyrics,
-                  FindKeyWordCountInSongByArtist, FindPhraseCountInSong):
+                  FindKeyWordCountInSongByArtist, FindPhraseCountInSong, FindPhraseCountInAllSongs):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -90,6 +82,10 @@ class StartPage(tk.Frame):
                                 command=lambda: [update_FindPhraseCountInSong(),
                                                  controller.show_frame("FindPhraseCountInSong")])
             button7.pack()
+            button8 = tk.Button(self, text="Find Phrase Count In All Songs", width=30,
+                                command=lambda: [update_FindPhraseCountInAllSongs(),
+                                                 controller.show_frame("FindPhraseCountInAllSongs")])
+            button8.pack()
         exit_button = tk.Button(self, text="Exit Program",width=30,
                             command=lambda: [exit(0)])
         exit_button.pack()
@@ -153,6 +149,11 @@ class StartPage(tk.Frame):
             app.frames["FindPhraseCountInSong"].destroy()
             app.frames["FindPhraseCountInSong"] = FindPhraseCountInSong(parent, controller)
             app.frames["FindPhraseCountInSong"].grid(row=0, column=0, sticky="nsew")
+
+        def update_FindPhraseCountInAllSongs():
+            app.frames["FindPhraseCountInAllSongs"].destroy()
+            app.frames["FindPhraseCountInAllSongs"] = FindPhraseCountInAllSongs(parent, controller)
+            app.frames["FindPhraseCountInAllSongs"].grid(row=0, column=0, sticky="nsew")
 
         def quick_select_file():  # Used to quickly test features, automatically picks khalid json
             global file_path
@@ -395,7 +396,7 @@ class FindKeywordCountInSong(tk.Frame):  # Find Keyword Count In Song
         label1.grid(row=2, column=3)
         keyword_var = tk.StringVar()
         entry = tk.Entry(self, width=15, textvariable=keyword_var)
-        entry.insert(END, "time")
+        entry.insert(END, "life")
         entry.grid(row=3, column=3)
         label2 = tk.Label(self, text="Select the song you want to search in")
         label2.grid(row=4, column=3)
@@ -492,12 +493,12 @@ class FindKeyWordCountInSongByArtist(tk.Frame):
         entry1 = tk.Entry(self, width=15, textvariable=keyword_var)
         entry1.insert(END, "alive")
         entry1.grid(row=3, column=3)
-        label2 = tk.Label(self, text="Enter the Artist's name")
+        label2 = tk.Label(self, text="Select the Artist's name")
         label2.grid(row=4, column=3)
         artist_var = tk.StringVar()
-        entry2 = tk.Entry(self, width=15, textvariable=artist_var)
-        entry2.insert(END, "Khalid")
-        entry2.grid(row=5, column=3)
+        # entry2 = tk.Entry(self, width=15, textvariable=artist_var)
+        # entry2.insert(END, "Khalid")
+        # entry2.grid(row=5, column=3)
         label3 = tk.Label(self, text="Select the song you want to search in")
         label3.grid(row=6, column=3)
 
@@ -510,8 +511,14 @@ class FindKeyWordCountInSongByArtist(tk.Frame):
         if data_is_loaded:
             list_of_songs = printGoodSongsFromJSON(data, bad_song_indices)
             bolded = font.Font(weight='bold')
+            # Make a dropdown with list of artists from currently selected song
+            list_of_artists = get_list_of_artists_in_song(data, radio_group.get())
+            selected_artist = StringVar()
+            selected_artist.set(list_of_artists[0])
+            drop = OptionMenu(self, selected_artist, *list_of_artists)
+            drop.grid(row=5, column=3)
             for i in range(len(list_of_songs)):
-                radiobutton = Radiobutton(checklist, text=list_of_songs[i], variable=radio_group, value=i)
+                radiobutton = Radiobutton(checklist, text=list_of_songs[i], variable=radio_group, value=i, command = lambda : update_dropdown())
                 if i not in bad_song_indices:
                     checklist.window_create("end", window=radiobutton)
                     checklist.insert("end", "\n")
@@ -526,8 +533,16 @@ class FindKeyWordCountInSongByArtist(tk.Frame):
             checklist.configure(state="disabled")
 
         def conduct_count():
-            keyword_count = findKeywordCountInSongByArtist(data, keyword_var.get(), radio_group.get(), artist_var.get())
-            message.set("The number of times \""+ keyword_var.get() + "\" is said in \n" + data['songs'][radio_group.get()]['title'] + " by " + artist_var.get() +  " is: " + str(keyword_count))
+            keyword_count = findKeywordCountInSongByArtist(data, keyword_var.get(), radio_group.get(), selected_artist.get())
+            message.set("The number of times \""+ keyword_var.get() + "\" is said in \n" + data['songs'][radio_group.get()]['title'] + " by " + selected_artist.get() +  " is: " + str(keyword_count))
+
+        def update_dropdown():  # Updates the dropdown menu with artists from the selected song
+            list_of_artists = get_list_of_artists_in_song(data, radio_group.get())
+            selected_artist.set(list_of_artists[0])
+            menu = drop["menu"]
+            menu.delete(0, "end")
+            for artist in list_of_artists:
+                menu.add_command(label=artist, command=lambda value=artist:selected_artist.set(value))
 
 
 class FindPhraseCountInSong(tk.Frame): # Find Phrase Count In Song
@@ -582,6 +597,61 @@ class FindPhraseCountInSong(tk.Frame): # Find Phrase Count In Song
             message.set("The number of times \""+ phrase_var.get() + "\" is said in \n" + data['songs'][radio_group.get()]['title'] + " is: " + str(keyword_count))
 
 
+class FindPhraseCountInAllSongs(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+        button = tk.Button(self, text="Go to the start page", command=lambda: controller.show_frame("StartPage"))
+        button.grid(row=0, column=0, sticky="NW")
+        button1 = tk.Button(self, text="Search", command=lambda: [conduct_count()])
+        button1.grid(row=0, column=5)
+        message = tk.StringVar()
+        label = tk.Label(self, text="Find Phrase Count In All Songs", font=controller.title_font)
+        label.grid(row=0, column=3)
+        label = tk.Label(self, textvariable=message, font=controller.medium_font)
+        label.grid(row=6, column=3)
+        label1 = tk.Label(self, text="Enter Phrase you want to search and count")
+        label1.grid(row=2, column=3)
+        phrase_var = tk.StringVar()
+        entry = tk.Entry(self, width=15, textvariable=phrase_var)
+        entry.insert(END, "my time")
+        entry.grid(row=3, column=3)
+        label2 = tk.Label(self, text="List of songs that will be included in the count")
+        label2.grid(row=4, column=3)
+
+        # Listbox and scrollbar to show songs program will count in
+        listbox = Listbox(self, width=55)
+        listbox.grid(row=5, column=3)
+        scrollbar = Scrollbar(self)
+        scrollbar.grid(row=5, column=4, sticky='NS')
+        if data_is_loaded:
+            list_of_songs = printGoodSongsFromJSON(data, bad_song_indices)
+            for i in range(len(list_of_songs)):
+                listbox.insert(END, str(i) + ": " + list_of_songs[i])
+
+        listbox.config(yscrollcommand=scrollbar.set)
+        bolded = font.Font(weight='bold')
+        listbox.config(font=bolded)
+        scrollbar.config(command=listbox.yview)
+
+
+        def conduct_count():
+            phrase_count = findPhraseCountInAllSongs(data, phrase_var.get(), bad_song_indices)
+            message.set("The number of times \""+ phrase_var.get() + "\" is said is: " + str(phrase_count))
+
+
+class FindKeywordCount(tk.Frame):  # One frame to do all the FindKeyword functions (In progress)
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+
+# Global Variables
+file_path = ""
+file_name = ""
+data = ""
+data_is_loaded = False
+invalid_file = False
+bad_song_indices = []
 
 if __name__ == "__main__":
     app = SongLyricAnalyzer()

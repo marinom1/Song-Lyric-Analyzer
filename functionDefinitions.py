@@ -693,9 +693,9 @@ def getOnlyArtistLyricsInSong(data, songIndex, artistName):
     lyrics = data['songs'][songIndex]['lyrics']
     # print("lyrics here is:",lyrics,"from song:",data['songs'][songIndex]['title'])
     if ': ' + artistName not in lyrics:  # If there are no other features on the song, headers will not say artist name
-        if artistName == data['songs'][songIndex]['artist']:  # Artist name does not match Genius song owner, return error because user inputted an invalid artist name
+        if artistName == data['songs'][songIndex]['artist']:  # If artist name does not match Genius song owner, return error because user inputted an invalid artist name
             print(artistName == data['songs'][songIndex]['artist'])
-            while (13 == 13):
+            while (True):
                 startOfHeader = lyrics.find('[', indexPointer, len(lyrics))
                 endOfHeader = lyrics.find(']', startOfHeader, len(lyrics))
                 headerToRemove = lyrics[startOfHeader:endOfHeader + 1]
@@ -710,7 +710,7 @@ def getOnlyArtistLyricsInSong(data, songIndex, artistName):
             print("Invalid artist name inputted by user")
 
     else:  # The song has 1 or more features
-        while (13 == 13):
+        while (True):
             startOfVerse = lyrics.find((': ' + artistName), indexPointer, len(lyrics)) + len(
                 artistName) + 4  # logic to skip the header and get right to lyrics
             endOfVerse = lyrics.find('\n\n', startOfVerse, len(lyrics))
@@ -819,11 +819,9 @@ def getListOfMostCommonTwoWordPhrasesInAllSongs(data, badSongIndices):
         if i not in badSongIndices:
             initialSong = i
             break
+    cumulativeListOfPhrases = getTwoWordPhrasesInSong(data, initialSong)  # Initial Cumulative list is just set to first song
 
-
-    cumulativeListOfPhrases = getTwoWordPhrasesInSong(data, initialSong) #Initial Cumulative list is just set to first song
-
-    for i in range(initialSong+1,len(data['songs'])): #Loop through all the songs
+    for i in range(initialSong+1,len(data['songs'])):  # Loop through all the songs
         if i not in badSongIndices:
             songCount = songCount + 1
             print("i here is:", i)
@@ -835,6 +833,48 @@ def getListOfMostCommonTwoWordPhrasesInAllSongs(data, badSongIndices):
 
     return cumulativeListOfPhrases
 
+
+def get_list_of_artists_in_song(data, song_index):
+    """Returns a list of all the artists on the song"""
+    # First add the name of the JSON artist
+    list_of_artists = []
+    list_of_artists.append(data['name'])
+    #Now add the song owner if not the same as JSON artist
+    current_artist = data["songs"][song_index]["primary_artist"]["name"]
+    if current_artist not in list_of_artists:
+        list_of_artists.append(current_artist)
+
+    # Now Loop through the list of featured artists and add to list_of_artists
+    for i in range(len(data["songs"][song_index]["featured_artists"])):
+        current_artist = data["songs"][song_index]["featured_artists"][i]["name"]
+        if current_artist not in list_of_artists:
+            list_of_artists.append(current_artist)
+    list_of_artists.sort()
+    return list_of_artists
+
+
+def get_list_of_artists_in_JSON(data, bad_song_indices):
+    """Loops through all the songs in the json, then return a alphabeticalized list with all the different artists that
+    appear in the JSON"""
+    # First add the name of the JSON artist
+    list_of_artists = []
+    list_of_artists.append(data['name'])
+    # Now Loop through all the songs and add name to list if it wasn't added before
+    # First loop to check for primary artist of all songs
+    for i in range(len(data["songs"])):
+        if i not in bad_song_indices:
+            current_artist = data["songs"][i]["primary_artist"]["name"]
+            if current_artist not in list_of_artists:
+                list_of_artists.append(current_artist)
+    # Next loop to check for other featured artists on the same song
+    for i in range(len(data["songs"])):
+        if i not in bad_song_indices:
+            for j in range (len(data["songs"][i]["featured_artists"])):
+                current_artist = data["songs"][i]["featured_artists"][j]["name"]
+                if current_artist not in list_of_artists:
+                    list_of_artists.append(current_artist)
+    list_of_artists.sort()
+    return list_of_artists
 
 # GUI Functions
 def load_existing_presets():
