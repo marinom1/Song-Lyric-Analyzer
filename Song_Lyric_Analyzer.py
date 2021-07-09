@@ -22,8 +22,9 @@ class SongLyricAnalyzer(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in (StartPage, ViewAllSongsFromJSON, SelectSongsToIgnore, FindKeywordCountInSong, FindKeywordCountInAllSongs, ViewLyrics,
-                  FindKeyWordCountInSongByArtist, FindPhraseCountInSong, FindPhraseCountInAllSongs):
+        for F in (StartPage, ViewAllSongsFromJSON, SelectSongsToIgnore, FindKeywordCountInSong,
+                  FindKeywordCountInAllSongs, ViewLyrics, FindKeyWordCountInSongByArtist, FindPhraseCountInSong,
+                  FindPhraseCountInAllSongs, FindKeywordCount):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -86,6 +87,10 @@ class StartPage(tk.Frame):
                                 command=lambda: [update_FindPhraseCountInAllSongs(),
                                                  controller.show_frame("FindPhraseCountInAllSongs")])
             button8.pack()
+            button9 = tk.Button(self, text="Find Keyword Count", width=30,
+                                command=lambda: [update_FindKeywordCount(),
+                                                 controller.show_frame("FindKeywordCount")])
+            button9.pack()
         exit_button = tk.Button(self, text="Exit Program",width=30,
                             command=lambda: [exit(0)])
         exit_button.pack()
@@ -154,6 +159,11 @@ class StartPage(tk.Frame):
             app.frames["FindPhraseCountInAllSongs"].destroy()
             app.frames["FindPhraseCountInAllSongs"] = FindPhraseCountInAllSongs(parent, controller)
             app.frames["FindPhraseCountInAllSongs"].grid(row=0, column=0, sticky="nsew")
+
+        def update_FindKeywordCount():
+            app.frames["FindKeywordCount"].destroy()
+            app.frames["FindKeywordCount"] = FindKeywordCount(parent, controller)
+            app.frames["FindKeywordCount"].grid(row=0, column=0, sticky="nsew")
 
         def quick_select_file():  # Used to quickly test features, automatically picks khalid json
             global file_path
@@ -425,7 +435,6 @@ class FindKeywordCountInSong(tk.Frame):  # Find Keyword Count In Song
             # disable the widget so users can't insert text into it
             checklist.configure(state="disabled")
 
-
         def conduct_count():
             keyword_count = findKeywordCountInSong(data, keyword_var.get(), radio_group.get())
             message.set("The number of times \""+ keyword_var.get() + "\" is said in \n" + data['songs'][radio_group.get()]['title'] + " is: " + str(keyword_count))
@@ -467,7 +476,6 @@ class FindKeywordCountInAllSongs(tk.Frame):  # Find Keyword Count In All Songs
         bolded = font.Font(weight='bold')
         listbox.config(font=bolded)
         scrollbar.config(command=listbox.yview)
-
 
         def conduct_count():
             keyword_count = findKeywordCountInAllSongs(data, keyword_var.get(), bad_song_indices)
@@ -642,8 +650,75 @@ class FindPhraseCountInAllSongs(tk.Frame):
 
 class FindKeywordCount(tk.Frame):  # One frame to do all the FindKeyword functions (In progress)
     def __init__(self, parent, controller):
+        def selected_item(event):
+            selected_song.set(listbox1.get(listbox1.curselection()))
+            song_index = listbox1.get(0, "end").index(selected_song.get())
+            text.configure(state="normal")
+            text.delete(1.0, "end")
+            text.insert(END, data['songs'][song_index]['lyrics'])
+            text.configure(state="disabled")
+
+        def do_popup(event):
+            try:
+                m.tk_popup(event.x_root, event.y_root)
+            finally:
+                m.grab_release()
+
         tk.Frame.__init__(self, parent)
         self.controller = controller
+        # These are all in column 0
+        button = tk.Button(self, text="Go to the start page", command=lambda: controller.show_frame("StartPage"))
+        button.grid(row=0, column=0, sticky="NW")
+        # Radio buttons for Search Specific Song or Search ALL songs
+        radio_group_song = tk.IntVar(value=0)
+        radiobutton_specific_song = Radiobutton(self, text="Search Specific Song", variable=radio_group_song, value=0).grid(row=1, column=0, columnspan=2)
+        radiobutton_all_songs = Radiobutton(self, text="Search ALL Songs", variable=radio_group_song, value=1).grid(row=2, column=0, columnspan=2)
+        # Radio buttons for Search Specified Artist or Search ALL artists
+        radio_group_artist = tk.IntVar(value=0)
+        radiobutton_specific_artist = Radiobutton(self, text="Search Specific Artist", variable=radio_group_artist, value=0).grid(row=3, column=0, columnspan=2)
+        radiobutton_all_artists = Radiobutton(self, text="Search ALL Artists", variable=radio_group_artist, value=1).grid(row=4, column=0, columnspan=2)
+        label = tk.Label(self, text="Apply filter to show\n or hide songs")
+        label.grid(row=5, column=0)
+        # Preset dropdown menu
+        # TODO Setup dropdown so it lists all presets
+        test = StringVar()
+        test.set("hello world")
+        there_are_existing_presets, loaded_presets = load_existing_presets()
+        test_list = ["Artist1", "Artist2", "Artist3"]
+        drop = OptionMenu(self, test, *test_list)
+        drop.grid(row=6, column=0)
+
+        # The listbox to show list of songs
+        listbox1 = Listbox(self, height=28, width=30)
+        listbox1.grid(row=5, column=1, rowspan=2)
+        scrollbar1 = Scrollbar(self)
+        scrollbar1.grid(row=5, column=2, rowspan=2, sticky="NSW")
+        if data_is_loaded:
+            list_of_songs = printAllSongsFromJSON(data)
+            for i in range(len(list_of_songs)):
+                listbox1.insert(END, str(i) + ": " + list_of_songs[i])
+        selected_song = tk.StringVar()
+        selected_song.set("No selection yet")
+        label = tk.Label(self, textvariable=selected_song, font=controller.title_font)
+        label.grid(row=1, column=2, columnspan=2)
+        listbox1.config(yscrollcommand=scrollbar1.set)
+        listbox1.bind('<<ListboxSelect>>', selected_item)
+        scrollbar1.config(command=listbox1.yview)
+
+        # The Text widget to display the lyrics in on the right
+        genius_font = tkfont.Font(family="Programme", size=14)
+        text = Text(self, wrap="word", height=15, width=40)
+        text.grid(row=5, column=3, rowspan=2, columnspan=2)
+        scrollbar2 = Scrollbar(self)
+        scrollbar2.grid(row=5, column=5, rowspan=2, sticky="NSW")
+        scrollbar2.config(command=text.yview)
+        text['yscrollcommand'] = scrollbar2.set
+        text.configure(font=genius_font, spacing1=4, spacing2=4, spacing3=4)
+        # Right click menu to copy
+        m = Menu(self, tearoff=0)
+        m.add_command(label="Copy")
+        text.bind("<Button-3>", do_popup)
+
 
 # Global Variables
 file_path = ""
