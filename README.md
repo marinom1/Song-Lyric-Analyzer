@@ -1,10 +1,10 @@
 # Sony Lyric Analyzer
 
-This is a sample README file.
+(In Progress)
 
 ## Introduction
 
-ToDo
+Music has been a part of human history for thousands of years. With Song-Lyric-Analyzer, you can find interesting statistics about specific songs, group of songs, artists, etc. SLA will take a lyicsgenius JSON file and you will have access to different functions to experiment and discover how repetitive a song is, how often an artist says a certain word or phrase, etc. 
 
 ## Functions
 
