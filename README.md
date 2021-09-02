@@ -1,4 +1,4 @@
-# Sony Lyric Analyzer
+# Song Lyric Analyzer
 
 (In Progress)
 
