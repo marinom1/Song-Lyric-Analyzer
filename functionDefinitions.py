@@ -1,22 +1,23 @@
 import json
 import os
+import sys
 from collections import Counter
 import re
 
-
 # Print Functions
 def print_all_songs_from_json(data):
-    """Prints all songs from the JSON
+    """
+    Prints all songs from the JSON generated from the LyricsGenius Python client
 
-        Parameters
-        -------
-        data : json
-            the json where the Genius data is stored in
+    Parameters
+    -------
+    data : json
+        the json where the Genius data is stored in
 
-        Returns
-        -------
-        listOfSongs : list
-            list of all songs in data
+    Returns
+    -------
+    list
+        list of all songs in data
     """
     list_of_songs = []
     for i in range(len(data['songs'])):
@@ -26,18 +27,41 @@ def print_all_songs_from_json(data):
 
 
 def print_bad_songs_from_json(data, bad_song_indices):
+    """
+    Prints all the song titles whose indices appear in bad_song_indices. If there are invalid elements in
+    bad_song_indices, then prints there were invalid values and shows a list of what the invalid elements were
+
+    Parameters
+    -------
+    data : json
+        the json where the Genius data is stored in
+    bad_song_indices : list
+        list of song indices to print their titles
+
+    Returns
+    -------
+    list
+        list of songs whose indices appeared in bad_song_indices or empty list if errors encountered
+    """
     if not bad_song_indices: #if list is empty
         print("No bad song indices")
         return []
-    if not is_valid_list(data, bad_song_indices):
-        print("Invalid Values in bad_song_indices, please remove them")
+    if not is_valid_indices_list(data, bad_song_indices):
+        print("Invalid Values in bad_song_indices, please remove them:\n")
+        for i in range(len(bad_song_indices)):
+            if not isinstance(bad_song_indices[i], int):
+                print('['+str(i)+']', bad_song_indices[i])
+            elif bad_song_indices[i] < 0 or bad_song_indices[i] > len(data['songs']) - 1:
+                print('['+str(i)+']', bad_song_indices[i])
         return []
     list_of_songs = []
-    for i in range(len(data['songs'])):
-        if i not in bad_song_indices: # if song is good, don't print or store song in list
-            continue
-        list_of_songs.append(data['songs'][i]['title'])
-        print(i, data['songs'][i]['title'])
+
+    # All values are valid at this point, now remove any duplicate values
+    bad_song_indices = remove_duplicate_valid_indices(bad_song_indices)
+
+    for index in bad_song_indices:
+        list_of_songs.append(data['songs'][index]['title'])
+        print(index, data['songs'][index]['title'])
 
     return list_of_songs
 
@@ -47,7 +71,7 @@ def print_good_songs_from_json(data, bad_song_indices):
     totalGoodSongs = 0
     list_of_good_songs = []
     for i in range(len(data['songs'])):
-        if i in bad_song_indices:
+        if i in set(bad_song_indices):
             continue
         print(i, data['songs'][i]['title'])
         totalGoodSongs = totalGoodSongs + 1
@@ -57,18 +81,38 @@ def print_good_songs_from_json(data, bad_song_indices):
 
 # Helper Functions
 
+def remove_duplicate_valid_indices(list_of_song_indices):
+    """
+    Removes duplicate valid indices from list_of_song_indices. Order is kept from the first appearance of a repeated
+    value.
+
+    Parameters
+    -------
+    list_of_song_indices : list
+        the list that needs duplicate values removed from
+
+    Returns
+    -------
+    list
+        the list with duplicates removed and order maintained
+    """
+    seen = set()
+    seen_add = seen.add
+    return [x for x in list_of_song_indices if not (x in seen or seen_add(x))]
+
 def remove_punctuation(string):
-    """Removes punctuation from a string
+    """
+    Removes punctuation from a string
 
-        Parameters
-        -------
-        string : str
-            the string that needs punctuation removed from
+    Parameters
+    -------
+    string : str
+        the string that needs punctuation removed from
 
-        Returns
-        -------
-        string
-            the string without punctuation
+    Returns
+    -------
+    string
+        the string without punctuation
     """
     #punc = '''!()-[]{};:"\,<>./?@#$%^&*_~'''
     punc = '''!()-[]'{};:"\,<>./?@#$%^&*_~''' #Uncomment this to remove apostrophes as well
@@ -80,14 +124,13 @@ def remove_punctuation(string):
 
 def remove_headers_from_lyrics(lyrics):
     """Gets lyrics without the header tags, returns string"""
-    indexPointer = 0
-    while (13 == 13):
-        startOfHeader = lyrics.find('[', indexPointer, len(lyrics))
-        endOfHeader = lyrics.find(']', startOfHeader, len(lyrics))
-        headerToRemove = lyrics[startOfHeader:endOfHeader + 1]
-        lyrics = lyrics.replace(headerToRemove, '')
-        if '[' not in lyrics:  # if no more headers to remove
-            return lyrics
+    index_pointer = 0
+    while '[' in lyrics:
+        start_of_header = lyrics.find('[', index_pointer, len(lyrics))
+        end_of_header = lyrics.find(']', start_of_header, len(lyrics))
+        header_to_remove = lyrics[start_of_header:end_of_header + 1]
+        lyrics = lyrics.replace(header_to_remove, '')
+    return lyrics
 
 def get_only_artist_lyrics_in_song(data, song_index, artist_name):
     """Will go through a song and get only the lyrics said by the artist, returns string"""
@@ -99,7 +142,7 @@ def get_only_artist_lyrics_in_song(data, song_index, artist_name):
     # print("lyrics here is:",lyrics,"from song:",data['songs'][song_index]['title'])
     if ': ' + artist_name not in original_lyrics:  # If there are no other features on the song, headers will not say artist name
         if artist_name == data['songs'][song_index]['artist']:  # If artist name does not match Genius song owner, return error because user inputted an invalid artist name
-            print(artist_name == data['songs'][song_index]['artist'])
+            #print(artist_name == data['songs'][song_index]['artist'])
             while ('[' in original_lyrics): # While lyrics still have headers in them
                 start_of_header = original_lyrics.find('[', index_pointer, len(original_lyrics))
                 end_of_header = original_lyrics.find(']', start_of_header, len(original_lyrics))
@@ -112,8 +155,10 @@ def get_only_artist_lyrics_in_song(data, song_index, artist_name):
         else:
             if (song_index < 0):
                 print("Invalid song_index")
+                pass
             else:
-                print("Invalid artist name inputted by user")
+                #print("Invalid artist name inputted by user")
+                pass
 
     else:  # The song has 1 or more features
         while ': ' + artist_name in original_lyrics[index_pointer:len(original_lyrics)]:
@@ -128,9 +173,24 @@ def get_only_artist_lyrics_in_song(data, song_index, artist_name):
 
     return lyrics_only_from_artist
 
-def is_valid_list(data, list_of_indices):
+def is_valid_indices_list(data, list_of_indices):
+    """
+    Checks if a list of indices contains only valid index values. A list is valid only if it contains indices
+    between 0 and the number of songs in data - 1. Negative numbers, indices out of range, strings, lists, etc are all
+    invalud values to be inside of list_of_indices and will make function return false.
+
+    Parameters
+    -------
+    data : json
+        the json where the Genius data is stored in
+    list_of_indices : list
+        the list of indices to check
+    Returns
+    -------
+    bool
+        True if list contains valid indices (or is empty), false if list contains invalid value(s)
+    """
     if not all(isinstance(x, int) for x in list_of_indices): # if bad_song_indices has invalid value(s) e.g string, double
-        print("Invalid song indices list input")
         return False
     # Check if indices are in valid range
     max_index = len(data['songs']) - 1
@@ -140,46 +200,63 @@ def is_valid_list(data, list_of_indices):
     return True
 
 def find_total_words_in_song(data, song_index):
-    """Will count the number of words in a song, does not include headers
+    """
+    Will count the number of words in a song, does not include headers
 
-        Parameters
-        -------
-        data : json
-            json with song info
-        song_index : int
-            index of song to check from json
-        Returns
-        -------
-        total_word_count
-            an int with how many total words are in the song
-        """
+    Parameters
+    -------
+    data : json
+        json with song info
+    song_index : int
+        index of song to check from json
+    Returns
+    -------
+    int
+        an int with how many total words are in the song
+    """
     total_word_count = 0
     lyrics = data['songs'][song_index]['lyrics']
     lyrics = remove_headers_from_lyrics(lyrics)
     lyrics = remove_punctuation(lyrics)
+    lyrics = lyrics.lower()
     total_word_count = len(lyrics.split())
     return total_word_count
 
 def find_total_unqiue_words_in_song(data, song_index):
-    """Will count the number of words in a song, does not include headers
+    """
+    Will count the number of unique words in a song, does not include headers
 
-        Parameters
-        -------
-        data : json
-            json with song info
-        song_index : int
-            index of song to check from json
-        Returns
-        -------
-        total_unique_word_count
-            an int with how many total unqiue words are in the song
-        """
+    Parameters
+    -------
+    data : json
+        json with song info
+    song_index : int
+        index of song to check from json
+
+    Returns
+    -------
+    int
+        an int with how many total unqiue words are in the song
+    """
     total_unique_word_count = 0
     lyrics = data['songs'][song_index]['lyrics']
     lyrics = remove_headers_from_lyrics(lyrics)
     lyrics = remove_punctuation(lyrics)
-    total_word_count = len(lyrics.split())
+    lyrics = lyrics.lower()
+    list_of_words = lyrics.split()
+    total_unique_word_count = len(set(list_of_words))
+    list_of_unique_words = set(list_of_words)
+    list_of_unique_words = list(list_of_unique_words)
+    list_of_unique_words.sort()
+    #print(list_of_unique_words)
     return total_unique_word_count
+
+def find_uniqueness_percent_of_song(data, song_index):
+    uniqueness_percent = 0
+    uniqueness_percent = find_total_unqiue_words_in_song(data, song_index) / find_total_words_in_song(data, song_index)
+
+    return uniqueness_percent
+
 
 # Write to CSV functions
 def write_counter_to_csv(counter, outputFileName):
@@ -202,21 +279,23 @@ def write_dict_to_csv(dict, outputFileName):
 
 # Find Frequency of keyword in one or all songs
 def find_keyword_count_in_song(data, keyword, songIndex):
-    """Will check one song to see how many times the keyword occurs
+    """
+    Will check one song to see how many times the keyword occurs
 
-        Parameters
-        -------
-        data : json
-            json with song info
-        keyword : str
-            keyword to check in each song
-        songIndex : int
-            index of song to check from json
-        Returns
-        -------
-        keywordCount
-            an int with how often the keyword appears in the song
-        """
+    Parameters
+    -------
+    data : json
+        json with song info
+    keyword : str
+        keyword to check in each song
+    songIndex : int
+        index of song to check from json
+
+    Returns
+    -------
+    int
+        an int with how often the keyword appears in the song
+    """
     keywordCount = 0
     keyword = keyword.lower()
     lyrics = data['songs'][songIndex]['lyrics']
@@ -231,46 +310,47 @@ def find_keyword_count_in_song(data, keyword, songIndex):
         for a in range(len(lyrics)):  # Loop through the current song
             if (keyword in lyrics[a]) & (keyword == lyrics[a]):
                 keywordCount = keywordCount + 1
-        print("The number of times \"" + keyword + "\" is said in", songTitle, " is: ", keywordCount)
+        # print("The number of times \"" + keyword + "\" is said in", songTitle, " is: ", keywordCount)
     return keywordCount
 
 
-def find_keyword_count_in_all_songs(data, keyword, badSongIndices):
+def find_keyword_count_in_all_songs(data, keyword, bad_song_indices):
     """Will go through the entire list of songs (in data) and count how many times the keyword appears in total"""
     keyword = keyword.lower()
-    keywordCount = 0
+    keyword_count = 0
     for i in range(len(data['songs'])):  # Loop through every song in data
-        if i in badSongIndices:  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
             continue
-        keywordCount = keywordCount + find_keyword_count_in_song(data, keyword, i)
-    print("The total number of times", keyword, "is said in every song is: ", keywordCount, "\n")
-    return keywordCount
+        keyword_count = keyword_count + find_keyword_count_in_song(data, keyword, i)
+    # print("The total number of times", keyword, "is said in every song is: ", keyword_count, "\n")
+    return keyword_count
 
 
-def find_keyword_count_in_song_by_artist(data, keyword, songIndex, artistName):
-    """Will check one song to see how many times the keyword is said by artist
+def find_keyword_count_in_song_by_artist(data, keyword, song_index, artist_name):
+    """
+    Will check one song to see how many times the keyword is said by artist
 
-        Parameters
-        -------
-        data : json
-            json with song info
-        keyword : str
-            keyword to check in each song
-        songIndex : int
-            index of song to check from json
-        artistName : str
-            name of artist to only check lyrics from
+    Parameters
+    -------
+    data : json
+        json with song info
+    keyword : str
+        keyword to check in each song
+    song_index : int
+        index of song to check from json
+    artist_name : str
+        name of artist to only check lyrics from
 
-        Returns
-        -------
-        keywordCount
-            an int with how often the keyword appears in the artist's lyrics
-        """
+    Returns
+    -------
+    int
+        an int with how often the keyword appears in the artist's lyrics
+    """
 
     keywordCount = 0
     keyword = keyword.lower()
-    lyrics = get_only_artist_lyrics_in_song(data, songIndex, artistName)
-    songTitle = data['songs'][songIndex]['title']
+    lyrics = get_only_artist_lyrics_in_song(data, song_index, artist_name)
+    songTitle = data['songs'][song_index]['title']
     if lyrics is not None:
         lyrics = lyrics.lower()
         lyrics = remove_punctuation(lyrics)
@@ -279,7 +359,7 @@ def find_keyword_count_in_song_by_artist(data, keyword, songIndex, artistName):
         for a in range(len(lyrics)):  # Loop through the current song
             if (keyword in lyrics[a]) & (keyword == lyrics[a]):
                 keywordCount = keywordCount + 1
-        print("The number of times \"" + keyword + "\" is said in", songTitle, "by", artistName, "is:", keywordCount)
+        # print("The number of times \"" + keyword + "\" is said in", songTitle, "by", artist_name, "is:", keywordCount)
     return keywordCount
 
 
@@ -288,11 +368,11 @@ def find_keyword_count_in_all_songs_by_artist(data, keyword, bad_song_indices, a
     total_count = 0
 
     for i in range(len(data['songs'])):  # Loop through all the songs
-        if i in bad_song_indices:
+        if i in set(bad_song_indices):
             continue
         current_count = find_keyword_count_in_song_by_artist(data, keyword, i, artist_name)
         total_count = total_count + current_count
-    print("The number of times", keyword, "is said by", artist_name, "in all songs is:", total_count)
+    # print("The number of times", keyword, "is said by", artist_name, "in all songs is:", total_count)
     return total_count
 
 
@@ -317,55 +397,58 @@ def find_keyword_counts_in_song(data, list_of_keywords, song_index):
     for keyword in list_of_keywords:  # Loop through all the keywords to count
         current_keyword = keyword
         list_of_keyword_counts.append((current_keyword, find_keyword_count_in_song(data, keyword, song_index)))
-    print(list_of_keyword_counts)
+    # print(list_of_keyword_counts)
     return list_of_keyword_counts
 
 
 def find_keyword_counts_in_all_songs(data, list_of_keywords, bad_song_indices):
-    """Takes a list of keywords and finds counts for every keyword in every song
-    Parameters
-        -------
-        data : json
-            json with song info
-        list_of_keywords : list
-            list of keywords to count for individually
-        bad_song_indices : list
-            list of song indices to ignore in the counts
+    """
+    Takes a list of keywords and finds counts for every keyword in every song
 
-        Returns
-        -------
-        list_of_keyword_counts : list
-            a list of tuples where first value is the keyword, second value is int of occurrences
+    Parameters
+    -------
+    data : json
+        json with song info
+    list_of_keywords : list
+        list of keywords to count for individually
+    bad_song_indices : list
+        list of song indices to ignore in the counts
+
+    Returns
+    -------
+    list
+        a list of tuples where first value is the keyword, second value is int of occurrences
     """
     list_of_keyword_counts = []
 
     for i in range(len(list_of_keywords)):  # Loop through all the keywords to count
         current_cumulative_count = 0
         for j in range(len(data['songs'])):  # Loop through every song in data
-            if j in bad_song_indices:  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+            if j in set(bad_song_indices):  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
                 continue
             current_cumulative_count = current_cumulative_count + find_keyword_count_in_song(data, list_of_keywords[i], j)
         list_of_keyword_counts.append((list_of_keywords[i], current_cumulative_count))
 
-    print(list_of_keyword_counts)
+    #print(list_of_keyword_counts)
     return list_of_keyword_counts
 
 
 def find_noun_counts_in_song(data, song_index):
-    """"Find counts for every noun in the song
+    """"
+    Find counts for every noun in the song
 
-        Parameters
-        -------
-        data : json
-            the json where the Genius data is stored in
+    Parameters
+    -------
+    data : json
+        the json where the Genius data is stored in
 
-        song_index : int
-            the song index of the song we want to find noun counts for
+    song_index : int
+        the song index of the song we want to find noun counts for
 
-        Returns
-        -------
-        counts : Counter
-            Counter object of all nouns in the song and their counts
+    Returns
+    -------
+    counts : Counter
+        Counter object of all nouns in the song and their counts
     """
 
     counts = Counter()
@@ -375,7 +458,7 @@ def find_noun_counts_in_song(data, song_index):
     for word in list(counts):  # filter out the words that arent nouns
         if word not in nouns:
             del counts[word]
-    print(counts)
+    #print(counts)
     return counts
 
 
@@ -405,7 +488,7 @@ def find_noun_counts_in_all_songs(data, bad_song_indices):
     for word in list(cumulative_counts):
         if word not in nouns:
             del cumulative_counts[word]
-    print(cumulative_counts)
+    #print(cumulative_counts)
     return cumulative_counts
 
 
@@ -438,9 +521,9 @@ def find_keyword_counts_and_compact_variants_in_all_songs(data, counts, list_of_
     dict_of_totals = {}
     for i in range(len(list_of_list_of_words)):
         all_count = findAllWordCountsInAllSongs(data, counts, bad_song_indices)
-        print("All the words are: ", all_count)
+        #print("All the words are: ", all_count)
         custom_count = customWhiteListCountObject(all_count, list_of_list_of_words[i])
-        print("The words after white-listing are: ", custom_count)
+        #print("The words after white-listing are: ", custom_count)
         total = 0
         for key in custom_count.keys():  # Loop to add up all the variants together to find total of root word
             # print("Key here is: ",custom_count.get(key))
@@ -448,7 +531,7 @@ def find_keyword_counts_and_compact_variants_in_all_songs(data, counts, list_of_
         print("\"" + list_of_list_of_words[i][0] + "\" and all its variants add up to: ", total, "\n")
         dict_of_totals[list_of_list_of_words[i][0]] = total
 
-    print("The final words and their variants add up to: ", dict_of_totals)
+    #print("The final words and their variants add up to: ", dict_of_totals)
     return dict_of_totals
 
 
@@ -480,17 +563,17 @@ def find_keyword_counts_and_compact_variants_in_all_songs_by_artist(data, counts
     dict_of_totals = {}
     for i in range(len(list_of_list_of_words)):
         all_count = findAllWordCountsInAllSongsByArtist(data, counts, bad_song_indices, artist_name)
-        print("All the words are: ", all_count)
+        #print("All the words are: ", all_count)
         custom_count = customWhiteListCountObject(all_count, list_of_list_of_words[i])
-        print("The words after white-listing are: ", custom_count)
+        #print("The words after white-listing are: ", custom_count)
         total = 0
         for key in custom_count.keys():  # Loop to add up all the variants together to find total of root word
             # print("Key here is: ",custom_count.get(key))
             total = total + custom_count.get(key)
-        print("\"" + list_of_list_of_words[i][0] + "\" and all its variants add up to: ", total, "\n")
+        #print("\"" + list_of_list_of_words[i][0] + "\" and all its variants add up to: ", total, "\n")
         dict_of_totals[list_of_list_of_words[i][0]] = total
 
-    print("The final words and their variants add up to: ", dict_of_totals)
+    #print("The final words and their variants add up to: ", dict_of_totals)
     return dict_of_totals
 
 # Find Frequency(s) of a phrase in one or more songs
@@ -506,22 +589,22 @@ def find_phrase_count_in_song(data, phrase, songIndex):
         string_of_words = remove_punctuation(string_of_words)
         string_of_words = string_of_words.replace('\u2005', ' ') # This catches weird bug I randomly found where spaces werent actually spaces...
         #print("lyrics should be good to go here:", string_of_words)
-        print(repr(string_of_words))
-        print(songIndex, "Currently looking at: ", data['songs'][songIndex]['title'])
+        #print(repr(string_of_words))
+        #print(songIndex, "Currently looking at: ", data['songs'][songIndex]['title'])
         list_of_matches = re.findall(r'\b' + phrase + r'\b', string_of_words)
         # print(list_of_matches)
         phrase_count = len(list_of_matches)
-    print("The number of times \"" + phrase + "\" is said in \"" + song_title + "\" is: ", phrase_count)
+    #print("The number of times \"" + phrase + "\" is said in \"" + song_title + "\" is: ", phrase_count)
     return phrase_count
 
 
 def find_phrase_count_in_all_songs(data, phrase, bad_song_indices):
     """Find phrase in all songs"""
-    print("Finding \"" + phrase + "\" in All Songs...")
+    #print("Finding \"" + phrase + "\" in All Songs...")
     phrase_count = 0
     phrase = phrase.lower()
     for i in range(len(data['songs'])):  # loop through all the songs
-        if i in bad_song_indices:  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
             continue
         list_of_words = data['songs'][i]['lyrics']
         if list_of_words is not None:
@@ -529,7 +612,7 @@ def find_phrase_count_in_all_songs(data, phrase, bad_song_indices):
             list_of_words = remove_punctuation(list_of_words)
             # print(i, "Currently looking at: ", data['songs'][i]['title'])
             phrase_count = phrase_count + find_phrase_count_in_song(data, phrase, i)
-    print("The total number of times", phrase, "is said is: ", phrase_count, "\n")
+    #print("The total number of times", phrase, "is said is: ", phrase_count, "\n")
     return phrase_count
 
 
@@ -540,9 +623,9 @@ def find_phrase_counts_in_song(data, list_of_phrases, song_index):
         current_phrase = list_of_phrases[i]
 
         list_of_phrase_counts.append((current_phrase, find_phrase_count_in_song(data, list_of_phrases[i], song_index)))
-        print(list_of_phrase_counts)
+        #print(list_of_phrase_counts)
 
-    print(list_of_phrase_counts)
+    #print(list_of_phrase_counts)
     return list_of_phrase_counts
 
 def find_phrase_count_in_song_by_artist(data, phrase, song_index, artist_name):
@@ -550,7 +633,7 @@ def find_phrase_count_in_song_by_artist(data, phrase, song_index, artist_name):
     phrase_count = 0
     phrase = phrase.lower()
     string_of_words = get_only_artist_lyrics_in_song(data, song_index, artist_name)
-    print(string_of_words)
+    #print(string_of_words)
     song_title = data['songs'][song_index]['title']
     if string_of_words is not None:
         string_of_words = string_of_words.lower()
@@ -559,8 +642,8 @@ def find_phrase_count_in_song_by_artist(data, phrase, song_index, artist_name):
         list_of_matches = re.findall(r'\b' + phrase + r'\b', string_of_words)
         # print(list_of_matches)
         phrase_count = len(list_of_matches)
-    print("The number of times \"" + phrase + "\" is said in \"" + song_title + "\" by", artist_name, " is: ",
-          phrase_count)
+    # print("The number of times \"" + phrase + "\" is said in \"" + song_title + "\" by", artist_name, " is: ",
+    #       phrase_count)
     return phrase_count
 
 
@@ -569,18 +652,19 @@ def find_song_where_keyword_is_said_the_most(data, keyword, bad_song_indices):
     highest_count = find_keyword_count_in_song(data, keyword, 0)
     title_of_highest_count = ''
     for i in range(len(data['songs'])):  # Loop through all the songs
-        if i in bad_song_indices:  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
             continue
         current_count = find_keyword_count_in_song(data, keyword, i)
         if current_count > highest_count:
             highest_count = current_count
             title_of_highest_count = data['songs'][i]['title']
         elif current_count == highest_count:
-            print("todo")
+            # TODO
+            pass
 
     list_of_info = [highest_count, title_of_highest_count]
-    print("The song with the most occurrences of", keyword, "is: ", title_of_highest_count, "with a count of:",
-          highest_count, "occurrences.")
+    # print("The song with the most occurrences of", keyword, "is: ", title_of_highest_count, "with a count of:",
+    #       highest_count, "occurrences.")
 
     return list_of_info
 
@@ -589,7 +673,7 @@ def find_song_where_phrase_is_said_the_most(data, phrase, bad_song_indices):
     highest_count = find_keyword_count_in_song(data, phrase, 0)
     title_of_highest_count = ''
     for i in range(len(data['songs'])):  # Loop through all the songs
-        if i in bad_song_indices:  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
             continue
         current_count = find_phrase_count_in_song(data, phrase, i)
         if current_count > highest_count:
@@ -597,29 +681,29 @@ def find_song_where_phrase_is_said_the_most(data, phrase, bad_song_indices):
             title_of_highest_count = data['songs'][i]['title']
 
     list_of_info = [highest_count, title_of_highest_count]
-    print("The song with the most occurrences of", phrase, "is: ", title_of_highest_count, "with a count of:", highest_count,
-          "occurrences.")
+    # print("The song with the most occurrences of", phrase, "is: ", title_of_highest_count, "with a count of:", highest_count,
+    #       "occurrences.")
     return list_of_info
 
 
 # Find All or Most Word Counts in specific song or every song
 def findAllWordCountsInSong(data, songIndex, counts):
-    """Counts how often every word occurs in a song
+    """
+    Counts how often every word occurs in a song
 
-        Parameters
-        -------
-        data : json
-            the json where the Genius data is stored in
-        songIndex : int
-            index of song in the json to look at
-        counts : Counter
-            Counter Object that will hold every word and how often it occurs
+    Parameters
+    -------
+    data : json
+        the json where the Genius data is stored in
+    songIndex : int
+        index of song in the json to look at
+    counts : Counter
+        Counter Object that will hold every word and how often it occurs
 
-        Returns
-        -------
-        counts : list
-            Counter Object of all words and their counts in the song
-
+    Returns
+    -------
+    list
+        list of all words and their counts in the song
     """
     lyrics = data['songs'][songIndex]['lyrics']
     lyrics = remove_headers_from_lyrics(lyrics)
@@ -635,7 +719,7 @@ def findAllWordCountsInSong(data, songIndex, counts):
 def findAllWordCountsInAllSongs(data, cumulativeCounts, badSongIndices):
     """Counts how often every word occurs cumulatively in every song in data"""
     for i in range(len(data['songs'])):  # loop through all the songs
-        if i in badSongIndices:  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
             continue
         cumulativeCounts = findAllWordCountsInSong(data, i, cumulativeCounts)
     #    print(i,"cumulativeCounts here is: ",cumulativeCounts)
@@ -661,10 +745,10 @@ def findMostWordCountsInSong(data, songIndex, counts, wordsToOmit):
     return counts
 
 
-def findMostWordCountsInAllSongs(data, cumulativeCounts, badSongIndices, wordsToOmit):
+def findMostWordCountsInAllSongs(data, cumulativeCounts, bad_song_indices, wordsToOmit):
     """Counts how often every word occurs minus the omitted words cumulatively in every song in data"""
     for i in range(len(data['songs'])):  # loop through all the songs
-        if i in badSongIndices:  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
             continue
         cumulativeCounts = findAllWordCountsInSong(data, i, cumulativeCounts)
 
@@ -685,34 +769,34 @@ def findAllWordCountsInSongByArtist(data, songIndex, counts, artistName):
     return counts
 
 
-def findAllWordCountsInAllSongsByArtist(data, cumulativeCounts, badSongIndices, artistName):
+def findAllWordCountsInAllSongsByArtist(data, cumulativeCounts, bad_song_indices, artistName):
     """Counts how often every word occurs cumulatively in every song in data by only the artist specified"""
     for i in range(len(data['songs'])):  # loop through all the songs
-        if i in badSongIndices:
+        if i in set(bad_song_indices):
             continue
         cumulativeCounts = findAllWordCountsInSongByArtist(data, i, cumulativeCounts, artistName)
     return cumulativeCounts
 
 
 # Find list of songs containing the keyword or phrase
-def getListOfSongsWithKeyword(data, keyword, badSongIndices):
+def getListOfSongsWithKeyword(data, keyword, bad_song_indices):
     """Get list of songs that have at least 1 occurrence of the keyword"""
     listOfSongs = []
     for i in range(len(data['songs'])):  # loop through all the songs
-        if i in badSongIndices:
+        if i in set(bad_song_indices):
             continue
         if find_keyword_count_in_song(data, keyword, i) > 0:
             listOfSongs.append(data['songs'][i]['title'])
-    print("The list of", len(listOfSongs), "song(s) containing the word \"" + keyword + "\" are: ", listOfSongs)
+    #print("The list of", len(listOfSongs), "song(s) containing the word \"" + keyword + "\" are: ", listOfSongs)
     return listOfSongs
 
 
-def getListOfSongsWithPhrase(data, phrase, badSongIndices):
+def getListOfSongsWithPhrase(data, phrase, bad_song_indices):
     """Get list of songs that have at least 1 occurrence of the phrase"""
     listOfSongs = []
     phrase = phrase.lower()
     for i in range(len(data['songs'])):  # loop through all the songs
-        if i in badSongIndices:  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
             continue
         lyrics = data['songs'][i]['lyrics']
         lyrics = remove_headers_from_lyrics(lyrics)
@@ -730,15 +814,15 @@ def getListOfSongsWithPhrase(data, phrase, badSongIndices):
                 listOfSongs.append(songTitle.replace('\u200b',
                                                      ''))  # the replace catches weird bug where \u200b was showing up in print(listOfSongs) entries
 
-    print("The list of", len(listOfSongs), "songs containing the phrase \"" + phrase + "\" are: ", listOfSongs)
+    #print("The list of", len(listOfSongs), "songs containing the phrase \"" + phrase + "\" are: ", listOfSongs)
     return listOfSongs
 
-def getListOfSongsWithoutPhrase(data, phrase, badSongIndices):
+def getListOfSongsWithoutPhrase(data, phrase, bad_song_indices):
     listOfAllSongs = []
-    listOfSongsWithPhrase = getListOfSongsWithPhrase(data, phrase, badSongIndices)
+    listOfSongsWithPhrase = getListOfSongsWithPhrase(data, phrase, bad_song_indices)
     listofSongsWithoutPhrase = []
     for i in range(len(data['songs'])):
-        if i in badSongIndices:
+        if i in set(bad_song_indices):
             continue
         currentSongTitle = data['songs'][i]['title']
         currentSongTitle = currentSongTitle.replace('\u200b', '')
@@ -749,14 +833,14 @@ def getListOfSongsWithoutPhrase(data, phrase, badSongIndices):
         else:
             listofSongsWithoutPhrase.append(listOfAllSongs[i])
 
-    print("The list of",len(listofSongsWithoutPhrase), "songs without the phrase \""+phrase+"\" are:", listofSongsWithoutPhrase)
+    #print("The list of",len(listofSongsWithoutPhrase), "songs without the phrase \""+phrase+"\" are:", listofSongsWithoutPhrase)
     return listofSongsWithoutPhrase
 
-def getListOfSongsWithKeywordByArtist(data, keyword, badSongIndices, artistName):
+def getListOfSongsWithKeywordByArtist(data, keyword, bad_song_indices, artistName):
     """Gets list of songs that have at least 1 occurrence of the keyword by the artist"""
     listOfSongs = []
     for i in range(len(data['songs'])):  # loop through all the songs
-        if i in badSongIndices:  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
             continue
         lyrics = get_only_artist_lyrics_in_song(data, i, artistName)
         lyrics = lyrics.lower()
@@ -764,17 +848,17 @@ def getListOfSongsWithKeywordByArtist(data, keyword, badSongIndices, artistName)
         lyrics = lyrics.split()
         if keyword in lyrics:
             listOfSongs.append(data['songs'][i]['title'].replace('\u200b', ''))
-    print("The list of", len(listOfSongs), "song(s) containing the word \"" + keyword + "\" said by", artistName,
-          "are: ", listOfSongs)
+    # print("The list of", len(listOfSongs), "song(s) containing the word \"" + keyword + "\" said by", artistName,
+    #       "are: ", listOfSongs)
 
     return listOfSongs
 
 
-def getListOfSongsWithPhraseByArtist(data, phrase, badSongIndices, artistName):
+def getListOfSongsWithPhraseByArtist(data, phrase, bad_song_indices, artistName):
     """Gets list of songs that have at least 1 occurrence of the phrase by the artist"""
     listOfSongs = []
     for i in range(len(data['songs'])):  # loop through all the songs
-        if i in badSongIndices:  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):  # if current song is an empty string, don't bother trying to analyze the song and continue to next song
             continue
         lyrics = get_only_artist_lyrics_in_song(data, i, artistName)
         lyrics = lyrics.lower()
@@ -783,8 +867,8 @@ def getListOfSongsWithPhraseByArtist(data, phrase, badSongIndices, artistName):
         phraseCount = len(listOfMatches)
         if phraseCount > 0:
             listOfSongs.append(data['songs'][i]['title'].replace('\u200b', ''))
-    print("The list of", len(listOfSongs), "song(s) containing the phrase \"" + phrase + "\" said by", artistName,
-          "are: ", listOfSongs)
+    # print("The list of", len(listOfSongs), "song(s) containing the phrase \"" + phrase + "\" said by", artistName,
+    #       "are: ", listOfSongs)
 
     return listOfSongs
 
@@ -872,7 +956,7 @@ def findCommonTwoWordPhrasesInTwoSongs(data, songIndex1, songIndex2):
                 commonPhrases.add(firstPhrase)
 
 
-    print("The common 2 word phrases from both songs are: ",commonPhrases)
+    #print("The common 2 word phrases from both songs are: ",commonPhrases)
     return commonPhrases
 
 def findHowManySongsEachPhraseOccurs(data, badSongIndices):
@@ -898,24 +982,24 @@ def getTwoWordPhrasesInSong(data, songIndex):
 
     return listOfPhrasesWithoutDuplicates
 
-def getListOfMostCommonTwoWordPhrasesInAllSongs(data, badSongIndices):
+def getListOfMostCommonTwoWordPhrasesInAllSongs(data, bad_song_indices):
     """Returns list of every song's unique two word phrases. Duplicates mean the phrase is in more than 1 song"""
     cumulativeListOfPhrases = []
     songCount = 0
     for i in range(len(data['songs'])):
-        if i not in badSongIndices:
+        if i not in set(bad_song_indices):
             initialSong = i
             break
     cumulativeListOfPhrases = getTwoWordPhrasesInSong(data, initialSong)  # Initial Cumulative list is just set to first song
 
     for i in range(initialSong+1,len(data['songs'])):  # Loop through all the songs
-        if i not in badSongIndices:
+        if i not in set(bad_song_indices):
             songCount = songCount + 1
-            print("i here is:", i)
+            #print("i here is:", i)
             currentSong = getTwoWordPhrasesInSong(data, i)
             cumulativeListOfPhrases.extend(currentSong)
     z = Counter(cumulativeListOfPhrases)
-    print("Checked ", songCount, "songs")
+    #print("Checked ", songCount, "songs")
     return z
 
     return cumulativeListOfPhrases
@@ -949,13 +1033,13 @@ def get_list_of_artists_in_JSON(data, bad_song_indices):
     # Now Loop through all the songs and add name to list if it wasn't added before
     # First loop to check for primary artist of all songs
     for i in range(len(data["songs"])):
-        if i not in bad_song_indices:
+        if i not in set(bad_song_indices):
             current_artist = data["songs"][i]["primary_artist"]["name"]
             if current_artist not in list_of_artists:
                 list_of_artists.append(current_artist)
     # Next loop to check for other featured artists on the same song
     for i in range(len(data["songs"])):
-        if i not in bad_song_indices:
+        if i not in set(bad_song_indices):
             for j in range (len(data["songs"][i]["featured_artists"])):
                 current_artist = data["songs"][i]["featured_artists"][j]["name"]
                 if current_artist not in list_of_artists:
