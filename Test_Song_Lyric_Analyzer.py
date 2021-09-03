@@ -34,17 +34,17 @@ class TestPrintFunctions(unittest.TestCase):
     def test_print_bad_songs_from_json_reverse_ordered_indices(self):
         khalid_bad_song_indices = [75, 74, 72, 70, 69, 48, 45, 38, 33]
         list_of_songs = print_bad_songs_from_json(data, khalid_bad_song_indices)
-        self.assertEqual(list_of_songs[0], 'Location (Remix)')
-        self.assertEqual(list_of_songs[1], 'Right Back (Remix)')
-        self.assertEqual(list_of_songs[8], 'Why Don’t You Come On')
+        self.assertEqual(list_of_songs[0], 'Why Don’t You Come On')
+        self.assertEqual(list_of_songs[1], 'Perfect')
+        self.assertEqual(list_of_songs[8], 'Location (Remix)')
         self.assertEqual(len(list_of_songs), 9)
 
-    def test_print_bad_songs_from_json_random_ordered_indices(self):
+    def test_print_bad_songs_from_json_unordered_indices(self):
         khalid_bad_song_indices = [38, 33, 72, 48, 70, 69, 45, 75, 74]
         list_of_songs = print_bad_songs_from_json(data, khalid_bad_song_indices)
-        self.assertEqual(list_of_songs[0], 'Location (Remix)')
-        self.assertEqual(list_of_songs[1], 'Right Back (Remix)')
-        self.assertEqual(list_of_songs[8], 'Why Don’t You Come On')
+        self.assertEqual(list_of_songs[0], 'Right Back (Remix)')
+        self.assertEqual(list_of_songs[1], 'Location (Remix)')
+        self.assertEqual(list_of_songs[8], 'Perfect')
         self.assertEqual(len(list_of_songs), 9)
 
     def test_print_bad_songs_from_json_empty_indices_list(self):
@@ -99,22 +99,22 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertEqual(get_only_artist_lyrics_in_song(data, -1, 'Khalid'), '')
 
     def test_is_valid_list_valid_values(self):
-        self.assertEqual(is_valid_list(data, [0, 1, 2, 3, 147]), True)
+        self.assertEqual(is_valid_indices_list(data, [0, 1, 2, 3, 147]), True)
 
     def test_is_valid_list_out_of_index_int_values(self):
-        self.assertEqual(is_valid_list(data, [-1,148]), False)
+        self.assertEqual(is_valid_indices_list(data, [-1,148]), False)
 
     def test_is_valid_list_mixed_values_in_range_and_out_of_range(self):
-        self.assertEqual(is_valid_list(data, [-1,0, 1, 2, 3, 147, 148]), False)
+        self.assertEqual(is_valid_indices_list(data, [-1,0, 1, 2, 3, 147, 148]), False)
 
     def test_is_valid_list_empty_list(self):
-        self.assertEqual(is_valid_list(data, []), True)
+        self.assertEqual(is_valid_indices_list(data, []), True)
 
     def test_is_valid_list_string_values(self):
-        self.assertEqual(is_valid_list(data, ['1-800-273-8255', 'Young Dumb & Broke', 'Motion']), False)
+        self.assertEqual(is_valid_indices_list(data, ['1-800-273-8255', 'Young Dumb & Broke', 'Motion']), False)
 
     def test_is_valid_list_double_values(self):
-        self.assertEqual(is_valid_list(data, [1.0, 2.0, 3.0, 6.0]), False)
+        self.assertEqual(is_valid_indices_list(data, [1.0, 2.0, 3.0, 6.0]), False)
 
     def test_find_total_words_in_song(self):
         self.assertEqual(find_total_words_in_song(data, 0), 542)
