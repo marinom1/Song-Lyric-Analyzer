@@ -1,4 +1,5 @@
 import unittest
+unittest.TestLoader.sortTestMethodsUsing = None
 from functionDefinitions import *
 
 # Lyrics_Khalid_all.json is testing input
@@ -57,7 +58,7 @@ class TestPrintFunctions(unittest.TestCase):
         list_of_songs = print_bad_songs_from_json(data, khalid_bad_song_indices)
         self.assertEqual(list_of_songs, [])
 
-    def test_print_bad_songs_from_json_some_out_of_index_int_values_in_list(self):
+    def test_print_bad_songs_from_json_some_out_of_range_int_values_in_list(self):
         khalid_bad_song_indices = [-1, 0, 50, 100, 300]
         list_of_songs = print_bad_songs_from_json(data, khalid_bad_song_indices)
         self.assertEqual(list_of_songs, [])
@@ -67,10 +68,26 @@ class TestPrintFunctions(unittest.TestCase):
         list_of_songs = print_bad_songs_from_json(data, khalid_bad_song_indices)
         self.assertEqual(list_of_songs, [])
 
+    def test_print_bad_songs_from_json_repeated_valid_values(self):
+        khalid_bad_song_indices = [24, 24, 25, 29, 29, 89]
+        list_of_songs = print_bad_songs_from_json(data, khalid_bad_song_indices)
+        self.assertEqual(list_of_songs, ["Reasons", "Cold Blooded", "Winter", "wildflower (rough)"])
 
+    def test_print_bad_songs_from_json_invalid_values_with_repeated_valid_values(self):
+        khalid_bad_song_indices = [0, 'Seven', 0, 1, 2, 2, 9, 11, 21.5, 18]
+        list_of_songs = print_bad_songs_from_json(data, khalid_bad_song_indices)
+        self.assertEqual(list_of_songs, [])
 
+    def test_print_good_songs_from_json_ordered_indices(self):
+        khalid_bad_song_indices = [33, 38, 45, 48, 69, 70, 72, 74, 75]
+        list_of_songs = print_good_songs_from_json(data, khalid_bad_song_indices)
+        self.assertEqual(list_of_songs[0], '1-800-273-8255')
+        self.assertEqual(list_of_songs[1], 'Young Dumb & Broke')
+        self.assertEqual(list_of_songs[8], 'Coaster')
+        self.assertEqual(list_of_songs[33], 'Motion')
+        self.assertEqual(len(list_of_songs), 139)
 
-    def test_print_good_songs_from_json(self):
+    def test_print_good_songs_from_json_reverse_ordered_indices(self):
         khalid_bad_song_indices = [75, 74, 72, 70, 69, 48, 45, 38, 33]
         self.assertTrue(print_good_songs_from_json(data, khalid_bad_song_indices))
         list_of_songs = print_good_songs_from_json(data, khalid_bad_song_indices)
@@ -80,8 +97,52 @@ class TestPrintFunctions(unittest.TestCase):
         self.assertEqual(list_of_songs[37], 'Right Back')
         self.assertEqual(len(list_of_songs), 139)
 
+    def test_print_good_songs_from_json_empty_indices_list(self):
+        khalid_bad_song_indices = []
+        list_of_songs = print_good_songs_from_json(data, khalid_bad_song_indices)
+        self.assertEqual(list_of_songs[0], '1-800-273-8255')
+        self.assertEqual(list_of_songs[1], 'Young Dumb & Broke')
+        self.assertEqual(list_of_songs[33], 'Location (Remix)')
+        self.assertEqual(list_of_songs[37], 'Bad Luck')
+        self.assertEqual(len(list_of_songs), 148)
+
+    def test_print_good_songs_from_json_string_values_in_list(self):
+        khalid_bad_song_indices = ['1-800-273-8255', 'Young Dumb & Broke', 'Right Back', 59, 73]
+        list_of_songs = print_good_songs_from_json(data, khalid_bad_song_indices)
+        self.assertEqual(list_of_songs, [])
+
+    def test_print_good_songs_from_json_some_out_of_range_int_values_in_list(self):
+        khalid_bad_song_indices = [-1, 0, 50, 100, 300]
+        list_of_songs = print_good_songs_from_json(data, khalid_bad_song_indices)
+        self.assertEqual(list_of_songs, [])
+
+    def test_print_good_songs_from_json_all_out_of_range_int_values_in_list(self):
+        khalid_bad_song_indices = [-1, 300, 555]
+        list_of_songs = print_good_songs_from_json(data, khalid_bad_song_indices)
+        self.assertEqual(list_of_songs, [])
+
+    def test_print_good_songs_from_json_repeated_valid_values(self):
+        khalid_bad_song_indices = [24, 24, 25, 29, 29, 89]
+        list_of_songs = print_good_songs_from_json(data, khalid_bad_song_indices)
+        self.assertEqual(list_of_songs[0], '1-800-273-8255' )
+        self.assertEqual(list_of_songs[1], 'Young Dumb & Broke')
+        self.assertEqual(list_of_songs[24], 'My Bad')
+        self.assertEqual(len(list_of_songs), 144)
+
+    def test_print_good_songs_from_json_invalid_values_with_repeated_valid_values(self):
+        khalid_bad_song_indices = [0, 'Seven', 0, 1, 2, 2, 9, 11, 21.5, 18]
+        list_of_songs = print_good_songs_from_json(data, khalid_bad_song_indices)
+        self.assertEqual(list_of_songs, [])
 
 class TestHelperFunctions(unittest.TestCase):
+    def test_remove_duplicate_valid_indices(self):
+        self.assertEqual(remove_duplicate_valid_indices([1,1,2,2,3,3,4,4]), [1,2,3,4])
+        self.assertEqual(remove_duplicate_valid_indices([1, 1, 1,1,1,1,1,1]), [1])
+        self.assertEqual(remove_duplicate_valid_indices([]), [])
+        self.assertEqual(remove_duplicate_valid_indices([1,2,3,4]), [1,2,3,4])
+        self.assertRaises(TypeError, remove_duplicate_valid_indices(["Leg", "Arm"]))
+
+
     def test_remove_punctuation(self):
         self.assertEqual(remove_punctuation('Let\'s'), 'Lets')
         self.assertEqual(remove_punctuation('abcd123@email.com'), 'abcd123emailcom')

@@ -57,10 +57,11 @@ def print_bad_songs_from_json(data, bad_song_indices):
     list_of_songs = []
 
     # All values are valid at this point, now remove any duplicate values
-    bad_song_indices = remove_duplicate_valid_indices(bad_song_indices)
+    if not len(set(bad_song_indices)) == len(bad_song_indices):
+        bad_song_indices = remove_duplicate_valid_indices(bad_song_indices)
 
     for index in bad_song_indices:
-        list_of_songs.append(data['songs'][index]['title'])
+        list_of_songs.append(data['songs'][index]['title'].replace('\u200b', ''))
         print(index, data['songs'][index]['title'])
 
     return list_of_songs
@@ -68,6 +69,18 @@ def print_bad_songs_from_json(data, bad_song_indices):
 
 def print_good_songs_from_json(data, bad_song_indices):
     """Prints all songs that are not on the bad_song_indices list. Returns list of song names that are good songs"""
+
+    if not bad_song_indices: #if list is empty
+        print("No bad song indices")
+    if not is_valid_indices_list(data, bad_song_indices):
+        print("Invalid Values in bad_song_indices, please remove them:\n")
+        for i in range(len(bad_song_indices)):
+            if not isinstance(bad_song_indices[i], int):
+                print('['+str(i)+']', bad_song_indices[i])
+            elif bad_song_indices[i] < 0 or bad_song_indices[i] > len(data['songs']) - 1:
+                print('['+str(i)+']', bad_song_indices[i])
+        return []
+
     totalGoodSongs = 0
     list_of_good_songs = []
     for i in range(len(data['songs'])):
@@ -75,7 +88,7 @@ def print_good_songs_from_json(data, bad_song_indices):
             continue
         print(i, data['songs'][i]['title'])
         totalGoodSongs = totalGoodSongs + 1
-        list_of_good_songs.append(data['songs'][i]['title'])
+        list_of_good_songs.append(data['songs'][i]['title'].replace('\u200b', ''))
     print("There are", totalGoodSongs, "good songs")
     return list_of_good_songs
 
@@ -117,13 +130,26 @@ def remove_punctuation(string):
     #punc = '''!()-[]{};:"\,<>./?@#$%^&*_~'''
     punc = '''!()-[]'{};:"\,<>./?@#$%^&*_~''' #Uncomment this to remove apostrophes as well
     for ele in string:
-        if ele in punc:
+        if ele in set(punc):
             string = string.replace(ele, "")
     return string
 
 
 def remove_headers_from_lyrics(lyrics):
-    """Gets lyrics without the header tags, returns string"""
+    """
+    Gets lyrics without the header tags, returns the lyrics with the headers removed
+    Example header: [Verse 1: Khalid]
+
+    Parameters
+    -------
+    lyrics : str
+        the string that needs headers removed from
+
+    Returns
+    -------
+    string
+        the string without the headers
+    """
     index_pointer = 0
     while '[' in lyrics:
         start_of_header = lyrics.find('[', index_pointer, len(lyrics))
@@ -133,7 +159,23 @@ def remove_headers_from_lyrics(lyrics):
     return lyrics
 
 def get_only_artist_lyrics_in_song(data, song_index, artist_name):
-    """Will go through a song and get only the lyrics said by the artist, returns string"""
+    """
+    Will go through a song and get only the lyrics said by the artist
+
+    Parameters
+    -------
+    data : json
+        the json where the Genius data is stored in
+    song_index : int
+        index of the song to retrieve lyrics for
+    artist_name : str
+        string of the artist's name to only get lyrics for
+
+    Returns
+    -------
+    string
+        the string of lyrics only from the specified artist
+    """
     lyrics_only_from_artist = ''
     index_pointer = 0
     start_of_verse = 0
