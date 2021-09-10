@@ -174,7 +174,7 @@ def remove_headers_from_lyrics(lyrics):
 
 def get_only_artist_lyrics_in_song(data, song_index, artist_name):
     """
-    Will go through a song and get only the lyrics said by the artist
+    Will go through a song and get only the lyrics said by the artist. Headers are removed.
 
     Parameters
     -------
@@ -278,6 +278,32 @@ def find_total_words_in_song(data, song_index):
     total_word_count = len(lyrics.split())
     return total_word_count
 
+def find_total_words_in_song_by_artist(data, song_index, artist_name):
+    """
+    Will count the number of words in a song by artist, does not include headers
+
+    Parameters
+    -------
+    data : json
+        json with song info
+    song_index : int
+        index of song to check from json
+    artist_name : str
+        string of the artist's name to only count words for
+
+    Returns
+    -------
+    int
+        an int with how many total words are in the song
+    """
+    total_word_count = 0
+    lyrics = get_only_artist_lyrics_in_song(data, song_index, artist_name)
+    lyrics = remove_headers_from_lyrics(lyrics)
+    lyrics = remove_punctuation(lyrics)
+    lyrics = lyrics.lower()
+    total_word_count = len(lyrics.split())
+    return total_word_count
+
 def find_total_unique_words_in_song(data, song_index):
     """
     Will count the number of unique words in a song, does not include headers
@@ -307,28 +333,79 @@ def find_total_unique_words_in_song(data, song_index):
     print(list_of_unique_words)
     return total_unique_word_count
 
+def find_total_unique_words_in_song_by_artist(data, song_index, artist_name):
+    """
+    Will count the number of unique words in a song by an artist, does not include headers
+
+    Parameters
+    -------
+    data : json
+        json with song info
+    song_index : int
+        index of song to check from json
+    artist_name : str
+        string of the artist's name to only get lyrics for
+
+    Returns
+    -------
+    int
+        an int with how many total unqiue words are in the song
+    """
+    total_unique_word_count = 0
+    lyrics = get_only_artist_lyrics_in_song(data, song_index, artist_name)
+    lyrics = remove_headers_from_lyrics(lyrics)
+    lyrics = remove_punctuation(lyrics)
+    lyrics = lyrics.lower()
+    list_of_words = lyrics.split()
+    total_unique_word_count = len(set(list_of_words))
+    list_of_unique_words = set(list_of_words)
+    list_of_unique_words = list(list_of_unique_words)
+    list_of_unique_words.sort()
+    print(list_of_unique_words)
+    return total_unique_word_count
+
 def find_uniqueness_percent_of_song(data, song_index):
     """
-        Returns the uniqueness value of a specified song. The uniqueness percent of a song tells us how much of a song's lyrics are unique. The formula for calculating
-        this value is unique_words/total_words.
+    Returns the uniqueness value of a specified song. The uniqueness percent of a song tells us how much of a song's lyrics are unique. The formula for calculating
+    this value is unique_words/total_words. Round sto 4 decimal places
 
-        Parameters
-        -------
-        data : json
-            json with song info
-        song_index : int
-            index of song to check from json
+    Parameters
+    -------
+    data : json
+        json with song info
+    song_index : int
+        index of song to check from json
 
-        Returns
-        -------
-        float
-            a float showing the percent of unique words in the song's lyrics
-        """
+    Returns
+    -------
+    float
+        a float showing the percent of unique words in the song's lyrics
+    """
     uniqueness_percent = 0
-    uniqueness_percent = find_total_unqiue_words_in_song(data, song_index) / find_total_words_in_song(data, song_index)
+    uniqueness_percent = find_total_unique_words_in_song(data, song_index) / find_total_words_in_song(data, song_index) * 100
 
-    return uniqueness_percent
+    return round(uniqueness_percent, 4)
 
+def find_uniqueness_percent_of_song_by_artist():
+    """
+    Returns the uniqueness value of a specified song. The uniqueness percent of a song tells us how much of a song's lyrics are unique. The formula for calculating
+    this value is unique_words/total_words.
+
+    Parameters
+    -------
+    data : json
+        json with song info
+    song_index : int
+        index of song to check from json
+    artist_name : str
+        string of the artist's name to only get lyrics for
+
+
+    Returns
+    -------
+    float
+        a float showing the percent of unique words in the song's lyrics
+    """
 
 # Write to CSV functions
 def write_counter_to_csv(counter, outputFileName):
@@ -338,7 +415,6 @@ def write_counter_to_csv(counter, outputFileName):
         fp.write('{}|{}\n'.format(word, count))
 
     fp.close()
-
 
 def write_dict_to_csv(dict, outputFileName):
     fp = open(outputFileName, encoding='utf-8-sig', mode='w')
@@ -453,10 +529,10 @@ def find_keyword_count_in_song_by_artist(data, keyword, song_index, artist_name)
         an int with how often the keyword appears in the artist's lyrics
     """
 
-    keywordCount = 0
+    keyword_count = 0
     keyword = keyword.lower()
     lyrics = get_only_artist_lyrics_in_song(data, song_index, artist_name)
-    songTitle = data['songs'][song_index]['title']
+    song_title = data['songs'][song_index]['title']
     if lyrics is not None:
         lyrics = lyrics.lower()
         lyrics = remove_punctuation(lyrics)
@@ -464,9 +540,9 @@ def find_keyword_count_in_song_by_artist(data, keyword, song_index, artist_name)
         # print(song_index, "Currently looking at: ", data['songs'][song_index]['title'])
         for a in range(len(lyrics)):  # Loop through the current song
             if (keyword in lyrics[a]) & (keyword == lyrics[a]):
-                keywordCount = keywordCount + 1
-        # print("The number of times \"" + keyword + "\" is said in", songTitle, "by", artist_name, "is:", keywordCount)
-    return keywordCount
+                keyword_count = keyword_count + 1
+        # print("The number of times \"" + keyword + "\" is said in", song_title, "by", artist_name, "is:", keyword_count)
+    return keyword_count
 
 
 def find_keyword_count_in_all_songs_by_artist(data, keyword, bad_song_indices, artist_name):
@@ -613,20 +689,21 @@ def find_noun_counts_in_song(data, song_index):
 
 
 def find_noun_counts_in_all_songs(data, bad_song_indices):
-    """Find counts for every noun in all songs
+    """
+    Find counts for every noun in all songs
 
-        Parameters
-        -------
-        data : json
-            the json where the Genius data is stored in
+    Parameters
+    -------
+    data : json
+        the json where the Genius data is stored in
 
-        bad_song_indices : list
-            list of song indices for songs we don't want to count for
+    bad_song_indices : list
+        list of song indices for songs we don't want to count for
 
-        Returns
-        -------
-        cumulative_counts : Counter
-            Counter object of all nouns in every song and their cumulative counts
+    Returns
+    -------
+    cumulative_counts : Counter
+        Counter object of all nouns in every song and their cumulative counts
     """
 
     if not is_valid_indices_list(data, bad_song_indices):
