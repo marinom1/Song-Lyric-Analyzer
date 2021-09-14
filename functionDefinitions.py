@@ -7,7 +7,7 @@ import re
 # Print Functions
 def print_all_songs_from_json(data):
     """
-    Prints all songs from the JSON generated from the LyricsGenius Python client
+    Prints all songs from the JSON generated from the LyricsGenius Python client search_artist function
 
     Parameters
     -------
@@ -141,8 +141,8 @@ def remove_punctuation(string):
     string
         the string without punctuation
     """
-    #punc = '''!()-[]{};:"\,<>./?@#$%^&*_~'''
-    punc = '''!()-[]'{};:"\,<>./?@#$%^&*_~''' #Uncomment this to remove apostrophes as well
+    punc = '''!()-[]{};:"\,<>./?@#$%^&*_~'''
+    #punc = '''!()-[]'{};:"\,<>./?@#$%^&*_~''' #Uncomment this to remove apostrophes as well
     for ele in string:
         if ele in set(punc):
             string = string.replace(ele, "")
@@ -327,10 +327,6 @@ def find_total_unique_words_in_song(data, song_index):
     lyrics = lyrics.lower()
     list_of_words = lyrics.split()
     total_unique_word_count = len(set(list_of_words))
-    list_of_unique_words = set(list_of_words)
-    list_of_unique_words = list(list_of_unique_words)
-    list_of_unique_words.sort()
-    print(list_of_unique_words)
     return total_unique_word_count
 
 def find_total_unique_words_in_song_by_artist(data, song_index, artist_name):
@@ -358,10 +354,6 @@ def find_total_unique_words_in_song_by_artist(data, song_index, artist_name):
     lyrics = lyrics.lower()
     list_of_words = lyrics.split()
     total_unique_word_count = len(set(list_of_words))
-    list_of_unique_words = set(list_of_words)
-    list_of_unique_words = list(list_of_unique_words)
-    list_of_unique_words.sort()
-    print(list_of_unique_words)
     return total_unique_word_count
 
 def find_uniqueness_percent_of_song(data, song_index):
@@ -386,9 +378,9 @@ def find_uniqueness_percent_of_song(data, song_index):
 
     return round(uniqueness_percent, 4)
 
-def find_uniqueness_percent_of_song_by_artist():
+def find_uniqueness_percent_of_song_by_artist(data, song_index, artist_name):
     """
-    Returns the uniqueness value of a specified song. The uniqueness percent of a song tells us how much of a song's lyrics are unique. The formula for calculating
+    Returns the uniqueness value of a specified song by the specified artist. The uniqueness percent of a song tells us how much of a song's lyrics are unique. The formula for calculating
     this value is unique_words/total_words.
 
     Parameters
@@ -404,8 +396,11 @@ def find_uniqueness_percent_of_song_by_artist():
     Returns
     -------
     float
-        a float showing the percent of unique words in the song's lyrics
+        a float showing the percent of unique words in the song's lyrics said by the specified artist
     """
+    uniqueness_percent = find_total_unique_words_in_song_by_artist(data, song_index, artist_name) / find_total_words_in_song_by_artist(data,song_index, artist_name) * 100
+    return round(uniqueness_percent, 4)
+
 
 # Write to CSV functions
 def write_counter_to_csv(counter, outputFileName):
@@ -926,6 +921,18 @@ def find_phrase_count_in_song_by_artist(data, phrase, song_index, artist_name):
 
 # Find the Song Where a Keyword or Phrase is said the most
 def find_song_where_keyword_is_said_the_most(data, keyword, bad_song_indices):
+    """
+    TODO
+    Parameters
+    ----------
+    data
+    keyword
+    bad_song_indices
+
+    Returns
+    -------
+
+    """
 
     if not is_valid_indices_list(data, bad_song_indices):
         print("Invalid Values in bad_song_indices, please remove them:\n")
@@ -1269,26 +1276,58 @@ def find_how_many_songs_each_phrase_occurs(data, bad_song_indices):
     # TODO
     print("5")
 
-def get_two_word_phrases_in_song(data, songIndex):
+def get_two_word_phrases_in_song(data, song_index):
     """
     Return list of all two word phrases from the song. No duplicates
     """
-    lyrics = data['songs'][songIndex]['lyrics']
+    lyrics = data['songs'][song_index]['lyrics']
     lyrics = remove_headers_from_lyrics(lyrics)
     lyrics = lyrics.lower()
     lyrics = remove_punctuation(lyrics)
     lyrics = lyrics.split()
-    listOfPhrases = []
+    list_of_phrases = []
     for i in range(len(lyrics)-1):
         phrase = lyrics[i] + " " + lyrics[i+1]
-        listOfPhrases.append(phrase)
+        list_of_phrases.append(phrase)
 
-    listOfPhrasesWithoutDuplicates = []
-    for i in listOfPhrases:
-        if i not in listOfPhrasesWithoutDuplicates:
-            listOfPhrasesWithoutDuplicates.append(i)
+    list_of_phrases = set(list_of_phrases)
+    list_of_phrases = list(list_of_phrases)
+    list_of_phrases = sorted(list_of_phrases)
+    return list_of_phrases
 
-    return listOfPhrasesWithoutDuplicates
+def get_two_word_phrases_in_song_with_duplicates(data, song_index):
+    """
+    Return list of all two word phrases from the song
+    """
+    lyrics = data['songs'][song_index]['lyrics']
+    lyrics = remove_headers_from_lyrics(lyrics)
+    lyrics = lyrics.lower()
+    lyrics = remove_punctuation(lyrics)
+    lyrics = lyrics.split()
+    list_of_phrases = []
+    for i in range(len(lyrics)-1):
+        phrase = lyrics[i] + " " + lyrics[i+1]
+        list_of_phrases.append(phrase)
+
+    return list_of_phrases
+
+def find_all_two_word_phrase_counts_in_song(data, song_index, counts):
+    """
+
+    Parameters
+    ----------
+    data
+    song_index
+
+    Returns
+    -------
+
+    """
+    list_of_phrases = get_two_word_phrases_in_song_with_duplicates(data, song_index)
+
+    counts = counts + Counter(list_of_phrases)
+    return counts
+
 
 def get_list_of_most_common_two_word_phrases_in_all_songs(data, bad_song_indices):
     """
@@ -1318,6 +1357,15 @@ def get_list_of_most_common_two_word_phrases_in_all_songs(data, bad_song_indices
 def get_list_of_artists_in_song(data, song_index):
     """
     Returns a list of all the artists on the song
+    Parameters
+    ----------
+    data
+    song_index
+
+    Returns
+    -------
+    list
+        list of all songs in data
     """
     # First add the name of the JSON artist
     list_of_artists = []
@@ -1340,6 +1388,15 @@ def get_list_of_artists_in_JSON(data, bad_song_indices):
     """
     Loops through all the songs in the json, then return a alphabeticalized list with all the different artists that
     appear in the JSON
+
+    Parameters
+    ----------
+    data
+    bad_song_indices
+
+    Returns
+    -------
+
     """
     # First add the name of the JSON artist
     list_of_artists = []
@@ -1360,6 +1417,50 @@ def get_list_of_artists_in_JSON(data, bad_song_indices):
                     list_of_artists.append(current_artist)
     list_of_artists.sort()
     return list_of_artists
+
+# Primary Song Analyzer Functions
+def analyze_song(data, song_index):
+    """
+    This function will run multiple functions to show the user interesting facts and statistics about the specified
+    song.
+    - Song Name
+    - Primary Artist
+    - Featured Artists (if any)
+    - Number of words in song
+    - 5 Most repeated words in the song
+    - 5 Most repeated phrases in the song
+    - Uniqueness percent of song
+    - TODO Sentiment analysis
+    -
+    Parameters
+    ----------
+    data
+    song_index
+
+    Returns
+    -------
+    list
+        list containing all the information about the song
+    """
+    song_info = []
+    song_info.append(data["songs"][song_index]["title"]) # Song Name
+    song_info.append(data["songs"][song_index]["artist"]) # Primary Artist
+
+    list_of_artists = []
+    for j in range(len(data["songs"][song_index]["featured_artists"])):
+        list_of_artists.append(data["songs"][song_index]["featured_artists"][j]["name"])
+    song_info.append(list_of_artists) # Featured Artists
+    song_info.append(find_total_words_in_song(data, song_index))
+    song_info.append(find_all_word_counts_in_song(data, song_index, Counter()).most_common(5))
+    song_info.append(find_all_two_word_phrase_counts_in_song(data, song_index, Counter()).most_common(5))
+
+    print("Song name:", song_info[0])
+    print("Primary Artist:", song_info[1])
+    print("Featured Artists:", song_info[2])
+    print("Total Words In Song:", song_info[3])
+    print("Most repeated word:", song_info[4])
+    print("Most repeated 2 word phrases:", song_info[5])
+
 
 # GUI Functions
 def load_existing_presets():
