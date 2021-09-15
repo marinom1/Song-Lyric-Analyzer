@@ -23,7 +23,6 @@ class TestPrintFunctions(unittest.TestCase):
         self.assertEqual(list_of_songs[147], 'Maranatha')
         self.assertEqual(len(list_of_songs), 148)
 
-
     def test_print_bad_songs_from_json_ordered_indices(self):
         khalid_bad_song_indices = [33, 38, 45, 48, 69, 70, 72, 74, 75]
         list_of_songs = print_bad_songs_from_json(data, khalid_bad_song_indices)
@@ -144,10 +143,10 @@ class TestHelperFunctions(unittest.TestCase):
 
     def test_remove_punctuation(self):
         self.assertEqual(remove_punctuation('Toast'), 'Toast')
-        self.assertEqual(remove_punctuation('Let\'s'), 'Lets')
+        self.assertEqual(remove_punctuation('Let\'s'), 'Let\'s')
         self.assertEqual(remove_punctuation('abcd123@email.com'), 'abcd123emailcom')
-        self.assertEqual(remove_punctuation('I\'ve been on the low, I been taking my time'), 'Ive been on the low I been taking my time')
-        self.assertEqual(remove_punctuation('I\'ve been !on" t;:he lo@?<.>w, I been tak[]ing m%$y ti-me'), 'Ive been on the low I been taking my time')
+        self.assertEqual(remove_punctuation('I\'ve been on the low, I been taking my time'), 'I\'ve been on the low I been taking my time')
+        self.assertEqual(remove_punctuation('I\'ve been !on" t;:he lo@?<.>w, I been tak[]ing m%$y ti-me'), 'I\'ve been on the low I been taking my time')
 
     def test_remove_headers_from_lyrics(self):
         lyrics = "[Pre-Chorus: Logic]\nI've been on the low, I been taking my time\nI feel like I'm out of my mind\nIt feel like my life ain't mine (Who can relate? Woo)\nI've been on the low, I been taking my time\nI feel like I'm out of my mind\nIt feel like my life ain't mine\n\n[Chorus: Logic]\nI don't wanna be alive, I don't wanna be alive"
@@ -176,6 +175,7 @@ class TestHelperFunctions(unittest.TestCase):
 
     def test_is_valid_list_string_values(self):
         self.assertEqual(is_valid_indices_list(data, ['1-800-273-8255', 'Young Dumb & Broke', 'Motion']), False)
+        self.assertEqual(is_valid_indices_list(data, ['']), False)
 
     def test_is_valid_list_double_values(self):
         self.assertEqual(is_valid_indices_list(data, [1.0, 2.0, 3.0, 6.0]), False)
@@ -201,7 +201,8 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertEqual(find_uniqueness_percent_of_song(data, 1), 27.0677)
 
     def test_find_uniqueness_percent_of_song_by_artist(self):
-        """TODO"""
+        self.assertEqual(find_uniqueness_percent_of_song_by_artist(data, 0, 'Khalid'), 52.3810)
+        self.assertEqual(find_uniqueness_percent_of_song_by_artist(data, 1, 'Khalid'), 27.0677)
 
 class TestCSVFunctions(unittest.TestCase):
     # TODO
@@ -217,8 +218,8 @@ class TestKeywordFunctions(unittest.TestCase):
         self.assertEqual(find_keyword_count_in_song(data, 'alive', 0), 13)
         self.assertEqual(find_keyword_count_in_song(data, 'Alive', 0), 13)
         self.assertEqual(find_keyword_count_in_song(data, 'Chorus', 0), 0)
-        self.assertEqual(find_keyword_count_in_song(data, 'What\'s', 0), 0)
-        self.assertEqual(find_keyword_count_in_song(data, 'Whats', 0), 2)
+        self.assertEqual(find_keyword_count_in_song(data, 'What\'s', 0), 2)
+        self.assertEqual(find_keyword_count_in_song(data, 'Whats', 0), 0)
 
     def test_find_keyword_count_in_all_songs(self):
         self.assertEqual(find_keyword_count_in_all_songs(data, 'love', []), 611)
@@ -282,6 +283,14 @@ class TestPhraseFunctions(unittest.TestCase):
 
     def test_find_song_where_phrase_is_said_the_most(self):
         self.assertEqual(find_song_where_phrase_is_said_the_most(data, 'i love you', []), [2, 'I Be On The Way'])
+
+    def test_get_two_word_phrases_in_song(self):
+        list_of_phrases = get_two_word_phrases_in_song(data, 0)
+        print(len(list_of_phrases))
+        self.assertEqual(list_of_phrases[0], '\'bout they')
+        self.assertEqual(list_of_phrases[1], '\'til my')
+        self.assertEqual(list_of_phrases[50], 'deep down')
+        self.assertEqual(list_of_phrases[274], 'your reflection')
 
 if __name__ == '__main__':
     unittest.main()
