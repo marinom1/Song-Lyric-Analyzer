@@ -152,7 +152,7 @@ def remove_punctuation(string):
 def remove_headers_from_lyrics(lyrics):
     """
     Gets lyrics without the header tags, returns the lyrics with the headers removed
-    Example header: [Verse 1: Khalid]
+    Example headers: [Verse 1: Khalid] , [Chorus] , [Intro]
 
     Parameters
     -------
@@ -384,14 +384,13 @@ def find_uniqueness_percent_of_song_by_artist(data, song_index, artist_name):
     this value is unique_words/total_words.
 
     Parameters
-    -------
+    ----------
     data : json
         json with song info
     song_index : int
         index of song to check from json
     artist_name : str
         string of the artist's name to only get lyrics for
-
 
     Returns
     -------
@@ -400,6 +399,23 @@ def find_uniqueness_percent_of_song_by_artist(data, song_index, artist_name):
     """
     uniqueness_percent = find_total_unique_words_in_song_by_artist(data, song_index, artist_name) / find_total_words_in_song_by_artist(data,song_index, artist_name) * 100
     return round(uniqueness_percent, 4)
+
+def get_spacy_nlp_object(text):
+    """ TODO
+    Uses spacy to process a string. The processed object contains information including tokenized componenets, part of
+    speech tagging, etc. Returns the spacy object
+    Parameters
+    ----------
+    text
+
+    Returns
+    -------
+
+    """
+    import spacy
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(text)
+    return doc
 
 
 # Write to CSV functions
@@ -656,7 +672,7 @@ def find_keyword_counts_in_all_songs_by_artist(data, list_of_keywords, bad_song_
 
 def find_noun_counts_in_song(data, song_index):
     """"
-    Find counts for every noun in the song
+    Find counts for every noun in the song. Nouns are determined by spacy's best prediction.
 
     Parameters
     -------
@@ -672,16 +688,19 @@ def find_noun_counts_in_song(data, song_index):
         Counter object of all nouns in the song and their counts
     """
 
-    counts = Counter()
-    from nltk.corpus import wordnet as wn  # this takes some time, so we only load it if we call this function
-    nouns = {x.name().split('.', 1)[0] for x in wn.all_synsets('n')}
-    counts = find_all_word_counts_in_song(data, song_index, counts)
-    for word in list(counts):  # filter out the words that arent nouns
-        if word not in nouns:
-            del counts[word]
-    #print(counts)
-    return counts
+    lyrics = data['songs'][song_index]['lyrics']
+    lyrics = remove_headers_from_lyrics(lyrics)
+    lyrics = remove_punctuation(lyrics)
+    lyrics.lower()
+    annotated_lyrics = get_spacy_nlp_object(lyrics)
+    list_of_nouns = []
+    for token in annotated_lyrics:
+        if token.pos_ == "NOUN":
+            list_of_nouns.append(token.text)
 
+    counts = Counter(list_of_nouns)
+
+    return counts
 
 def find_noun_counts_in_all_songs(data, bad_song_indices):
     """
@@ -1427,7 +1446,10 @@ def analyze_song(data, song_index):
     - Primary Artist
     - Featured Artists (if any)
     - Number of words in song
-    - 5 Most repeated words in the song
+    - 5 Most Repeated Words In The Song
+    - 5 Most Repeated Nouns In The Song
+    - 5 Most Repeated Adjectives In The Song TODO
+    - 5 Most Repeated Adverbs In The Song TODO
     - 5 Most repeated phrases in the song
     - Uniqueness percent of song
     - TODO Sentiment analysis
@@ -1452,14 +1474,22 @@ def analyze_song(data, song_index):
     song_info.append(list_of_artists) # Featured Artists
     song_info.append(find_total_words_in_song(data, song_index))
     song_info.append(find_all_word_counts_in_song(data, song_index, Counter()).most_common(5))
+    song_info.append(find_noun_counts_in_song(data, song_index).most_common(5))
+
+    #repeated adjectives
+
+    #repeated adverbs
+
+
+    #repeated phrases
     song_info.append(find_all_two_word_phrase_counts_in_song(data, song_index, Counter()).most_common(5))
 
     print("Song name:", song_info[0])
     print("Primary Artist:", song_info[1])
     print("Featured Artists:", song_info[2])
     print("Total Words In Song:", song_info[3])
-    print("Most repeated word:", song_info[4])
-    print("Most repeated 2 word phrases:", song_info[5])
+    print("5 Most Repeated Words In The Song:", song_info[4])
+    print("5 Most Repeated Nouns In The Song:", song_info[5])
 
 
 # GUI Functions

@@ -248,8 +248,9 @@ class TestKeywordFunctions(unittest.TestCase):
         self.assertEqual(find_keyword_counts_in_all_songs(data, ['Alive', 'Love', 'Salmon'], []), [('Alive', 70), ('Love', 611), ('Salmon', 0)])
 
     def test_find_noun_counts_in_song(self):
-        # TODO
-        self.assertEqual(True, True)
+        noun_counts = find_noun_counts_in_song(data, 0)
+        self.assertEqual(noun_counts.get('life'), 9)
+        self.assertEqual(noun_counts.most_common(5), [('life', 9), ('mind', 7), ('low', 6), ('time', 6), ('mine', 4)])
 
     def test_find_noun_counts_in_all_songs(self):
         # TODO
