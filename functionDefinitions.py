@@ -670,35 +670,38 @@ def find_keyword_counts_in_song_by_artist(data, list_of_keywords, song_index_, a
 def find_keyword_counts_in_all_songs_by_artist(data, list_of_keywords, bad_song_indices, artist_name):
     """TODO"""
 
-def find_noun_counts_in_song(data, song_index):
+def find_pos_counts_in_song(data, song_index, pos):
     """"
-    Find counts for every noun in the song. Nouns are determined by spacy's best prediction.
+    Find counts for every specified part of speech (pos) in the song. Pos' are determined by spacy's best prediction.
 
     Parameters
     -------
     data : json
         the json where the Genius data is stored in
-
     song_index : int
         the song index of the song we want to find noun counts for
 
+    pos:  string
+        the part of speech to count
     Returns
     -------
     counts : Counter
         Counter object of all nouns in the song and their counts
     """
-
+    if pos not in {'ADJ', 'ADP', 'ADV', 'AUX', 'CONJ', 'CCONJ', 'DET', 'INTJ', 'NOUN', 'NUM', 'PART', 'PRON', 'PROPN', 'PUNCT', 'SCONJ', 'SCONJ', 'SYM', 'VERB', 'X', 'SPACE'}:
+        print("\"", pos, "\" is not a valid pos tag. Please enter a valid pos tag")
+        return Counter()
     lyrics = data['songs'][song_index]['lyrics']
     lyrics = remove_headers_from_lyrics(lyrics)
     lyrics = remove_punctuation(lyrics)
     lyrics.lower()
     annotated_lyrics = get_spacy_nlp_object(lyrics)
-    list_of_nouns = []
+    list_of_pos = []
     for token in annotated_lyrics:
-        if token.pos_ == "NOUN":
-            list_of_nouns.append(token.text)
+        if token.pos_ == pos:
+            list_of_pos.append(token.text)
 
-    counts = Counter(list_of_nouns)
+    counts = Counter(list_of_pos)
 
     return counts
 
@@ -1025,8 +1028,8 @@ def find_all_word_counts_in_song(data, song_index, counts):
 
     Returns
     -------
-    list
-        list of all words and their counts in the song
+    counts
+        Counter Object that will hold every word and how often it occurs
     """
     lyrics = data['songs'][song_index]['lyrics']
     lyrics = remove_headers_from_lyrics(lyrics)
@@ -1372,6 +1375,47 @@ def get_list_of_most_common_two_word_phrases_in_all_songs(data, bad_song_indices
 
     return cumulative_list_of_phrases
 
+def find_most_repeated_phrases_of_any_length_in_song(data, song_index):
+    """
+    Will scan through a song's lyrics and try to find the most repeated phrases.
+    Parameters
+    ----------
+    data
+    song_index
+
+    Returns
+    -------
+
+    """
+    lyrics = data['songs'][song_index]['lyrics']
+    lyrics = remove_headers_from_lyrics(lyrics)
+    lyrics = lyrics.lower()
+    lyrics = remove_punctuation(lyrics)
+    lyrics = lyrics.split()
+
+    list_of_all_phrases = []
+    last_word_index = 0
+    x = len(lyrics)
+
+    for phrase_length in range(1, len(lyrics) + 1):
+        first_word_index = 0
+        last_word_index = phrase_length - 1
+        for j in range(last_word_index, len(lyrics)):
+            current_phrase_list = lyrics[first_word_index:first_word_index + phrase_length]
+            current_phrase = ""
+            for i, word in enumerate(current_phrase_list):
+                if i is len(current_phrase_list) - 1:
+                    current_phrase += str(word)
+                else:
+                    current_phrase += str(word) + " "
+            list_of_all_phrases.append(current_phrase)
+            first_word_index = first_word_index + 1
+            last_word_index = last_word_index + 1
+    print(list_of_all_phrases)
+    phrases_counts = Counter(list_of_all_phrases)
+
+    return phrases_counts
+
 
 def get_list_of_artists_in_song(data, song_index):
     """
@@ -1446,13 +1490,15 @@ def analyze_song(data, song_index):
     - Primary Artist
     - Featured Artists (if any)
     - Number of words in song
+    - Number of unique words in song
+    - Uniqueness percent of song
     - 5 Most Repeated Words In The Song
     - 5 Most Repeated Nouns In The Song
     - 5 Most Repeated Adjectives In The Song TODO
     - 5 Most Repeated Adverbs In The Song TODO
-    - 5 Most repeated phrases in the song
-    - Uniqueness percent of song
-    - TODO Sentiment analysis
+    - 5 Most repeated 2 word phrases in the song
+
+    - TODO Sentiment analysis ?
     -
     Parameters
     ----------
@@ -1473,13 +1519,15 @@ def analyze_song(data, song_index):
         list_of_artists.append(data["songs"][song_index]["featured_artists"][j]["name"])
     song_info.append(list_of_artists) # Featured Artists
     song_info.append(find_total_words_in_song(data, song_index))
+    song_info.append(find_total_unique_words_in_song(data, song_index))
+    song_info.append(find_uniqueness_percent_of_song(data, song_index))
     song_info.append(find_all_word_counts_in_song(data, song_index, Counter()).most_common(5))
-    song_info.append(find_noun_counts_in_song(data, song_index).most_common(5))
+    song_info.append(find_pos_counts_in_song(data, song_index, 'NOUN').most_common(5))
 
     #repeated adjectives
-
+    song_info.append(find_pos_counts_in_song(data, song_index, 'ADJ').most_common(5))
     #repeated adverbs
-
+    song_info.append(find_pos_counts_in_song(data, song_index, 'ADV').most_common(5))
 
     #repeated phrases
     song_info.append(find_all_two_word_phrase_counts_in_song(data, song_index, Counter()).most_common(5))
@@ -1488,8 +1536,16 @@ def analyze_song(data, song_index):
     print("Primary Artist:", song_info[1])
     print("Featured Artists:", song_info[2])
     print("Total Words In Song:", song_info[3])
-    print("5 Most Repeated Words In The Song:", song_info[4])
-    print("5 Most Repeated Nouns In The Song:", song_info[5])
+    print("Number Of Unique Words In Song:", song_info[4])
+    print("Uniqueness Percent Of Song:", str(song_info[5])+'%')
+    print("5 Most Repeated Words In The Song:", song_info[6])
+    print("5 Most Repeated Nouns In The Song:", song_info[7])
+    print("5 Most Repeated Adjectives In The Song:", song_info[8])
+    print("5 Most Repeated Adverbs In The Song:", song_info[9])
+    print("5 Most Repeated 2-Word Phrases In The Song:", song_info[10])
+
+    print("\n")
+    return song_info
 
 
 # GUI Functions
