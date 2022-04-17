@@ -247,10 +247,11 @@ class TestKeywordFunctions(unittest.TestCase):
         self.assertEqual(find_keyword_counts_in_all_songs(data, ['alive', 'love', 'salmon'], []), [('alive', 70), ('love', 611), ('salmon', 0)])
         self.assertEqual(find_keyword_counts_in_all_songs(data, ['Alive', 'Love', 'Salmon'], []), [('Alive', 70), ('Love', 611), ('Salmon', 0)])
 
-    def test_find_noun_counts_in_song(self):
-        noun_counts = find_noun_counts_in_song(data, 0)
+    def test_find_pos_counts_in_song(self):
+        noun_counts = find_pos_counts_in_song(data, 0, "NOUN")
         self.assertEqual(noun_counts.get('life'), 9)
         self.assertEqual(noun_counts.most_common(5), [('life', 9), ('mind', 7), ('low', 6), ('time', 6), ('mine', 4)])
+        self.assertEqual(find_pos_counts_in_song(data, 0, 'noun'), Counter() )
 
     def test_find_noun_counts_in_all_songs(self):
         # TODO
@@ -292,6 +293,10 @@ class TestPhraseFunctions(unittest.TestCase):
         self.assertEqual(list_of_phrases[1], '\'til my')
         self.assertEqual(list_of_phrases[50], 'deep down')
         self.assertEqual(list_of_phrases[274], 'your reflection')
+
+    def test_find_most_repeated_phrases_of_any_length_in_song(self):
+        x = find_most_repeated_phrases_of_any_length_in_song(data, 0)
+        self.assertEqual(x.most_common(1), [('i', 50)])
 
 if __name__ == '__main__':
     unittest.main()
