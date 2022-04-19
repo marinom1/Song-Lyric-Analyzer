@@ -148,6 +148,45 @@ def remove_punctuation(string):
             string = string.replace(ele, "")
     return string
 
+def remove_unneeded_headers_and_footers(lyrics):
+    """
+        Gets lyrics without the unnessarry "[Song Name] Lyrics" at the start and the [number]Embed at the end.
+        This has only started popping up in retrieved lyrics recently and hopefully will be fixed by LyricsGenius
+        soon.
+
+        Parameters
+        -------
+        lyrics : str
+            the string that needs headers removed from
+
+        Returns
+        -------
+        string
+            the string without the unnecessary headers and footers
+        """
+
+    # Remove header first
+    if " Lyrics[" in lyrics:
+        start_of_header = 0
+        end_of_header = lyrics.find(' Lyrics[', start_of_header, len(lyrics))
+        header_to_remove = lyrics[start_of_header:end_of_header + 7]
+        lyrics = lyrics.replace(header_to_remove, '')
+
+        # Now remove footer
+        start_of_footer = len(lyrics) - 6
+        end_of_footer = len(lyrics)
+        char_is_digit = True
+        while char_is_digit:
+            current_char = lyrics[start_of_footer]
+            if current_char.isdigit():
+                char_is_digit = True
+                start_of_footer = start_of_footer - 1
+            else:
+                char_is_digit = False
+                start_of_footer = start_of_footer + 1
+        footer_to_remove = lyrics[start_of_footer:end_of_footer]
+        lyrics = lyrics.replace(footer_to_remove, '')
+    return lyrics
 
 def remove_headers_from_lyrics(lyrics):
     """
@@ -164,6 +203,7 @@ def remove_headers_from_lyrics(lyrics):
     string
         the string without the headers
     """
+    lyrics = remove_unneeded_headers_and_footers(lyrics)
     index_pointer = 0
     while '[' in lyrics:
         start_of_header = lyrics.find('[', index_pointer, len(lyrics))
@@ -1013,7 +1053,7 @@ def find_song_where_phrase_is_said_the_most(data, phrase, bad_song_indices):
 
 
 # Find All or Most Word Counts in specific song or every song
-def find_all_word_counts_in_song(data, song_index, counts):
+def find_all_word_counts_in_song(data, song_index, convert_to_list = False, counts = Counter()):
     """
     Counts how often every word occurs in a song
 
@@ -1023,13 +1063,15 @@ def find_all_word_counts_in_song(data, song_index, counts):
         the json where the Genius data is stored in
     song_index : int
         index of song in the json to look at
+    convert_to_list : Boolean
+        If true, will return the output in a list data type, otherwise will return as Counter object
     counts : Counter
-        Counter Object that will hold every word and how often it occurs
+        Counter Object that will hold every word and how often it occurs, optional param
 
     Returns
     -------
-    counts
-        Counter Object that will hold every word and how often it occurs
+    counts : Counter or List
+        Counter Object or list (depending on convert_to_list) that will hold every word and how often it occurs
     """
     lyrics = data['songs'][song_index]['lyrics']
     lyrics = remove_headers_from_lyrics(lyrics)
@@ -1039,6 +1081,9 @@ def find_all_word_counts_in_song(data, song_index, counts):
         lyrics = lyrics.split()
         counts = counts + Counter(lyrics)
         # print(counts)
+
+    if convert_to_list:
+        return list(counts)
     return counts
 
 
