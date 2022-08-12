@@ -1,6 +1,7 @@
-import unittest
-unittest.TestLoader.sortTestMethodsUsing = None
 from functionDefinitions import *
+import unittest
+
+unittest.TestLoader.sortTestMethodsUsing = None
 
 # Lyrics_Khalid_all.json is testing input
 with open('Lyrics_Khalid_all.json') as json_file:
@@ -9,7 +10,7 @@ with open('Lyrics_Khalid_all.json') as json_file:
 
 class TestPrintFunctions(unittest.TestCase):
 
-    def setUp(self): # Can make files here, and delete them in tearDown
+    def setUp(self):  # Can make files here, and delete them in tearDown
         pass
 
     def tearDown(self):
@@ -123,7 +124,7 @@ class TestPrintFunctions(unittest.TestCase):
     def test_print_good_songs_from_json_repeated_valid_values(self):
         khalid_bad_song_indices = [24, 24, 25, 29, 29, 89]
         list_of_songs = print_good_songs_from_json(data, khalid_bad_song_indices)
-        self.assertEqual(list_of_songs[0], '1-800-273-8255' )
+        self.assertEqual(list_of_songs[0], '1-800-273-8255')
         self.assertEqual(list_of_songs[1], 'Young Dumb & Broke')
         self.assertEqual(list_of_songs[24], 'My Bad')
         self.assertEqual(len(list_of_songs), 144)
@@ -133,30 +134,36 @@ class TestPrintFunctions(unittest.TestCase):
         list_of_songs = print_good_songs_from_json(data, khalid_bad_song_indices)
         self.assertEqual(list_of_songs, [])
 
+
 class TestHelperFunctions(unittest.TestCase):
     def test_remove_duplicate_valid_indices(self):
-        self.assertEqual(remove_duplicate_valid_indices([1,1,2,2,3,3,4,4]), [1,2,3,4])
-        self.assertEqual(remove_duplicate_valid_indices([1, 1, 1,1,1,1,1,1]), [1])
+        self.assertEqual(remove_duplicate_valid_indices([1, 1, 2, 2, 3, 3, 4, 4]), [1, 2, 3, 4])
+        self.assertEqual(remove_duplicate_valid_indices([1, 1, 1, 1, 1, 1, 1, 1]), [1])
         self.assertEqual(remove_duplicate_valid_indices([]), [])
-        self.assertEqual(remove_duplicate_valid_indices([1,2,3,4]), [1,2,3,4])
+        self.assertEqual(remove_duplicate_valid_indices([1, 2, 3, 4]), [1, 2, 3, 4])
         self.assertRaises(TypeError, remove_duplicate_valid_indices(["Leg", "Arm"]))
 
     def test_remove_punctuation(self):
         self.assertEqual(remove_punctuation('Toast'), 'Toast')
         self.assertEqual(remove_punctuation('Let\'s'), 'Let\'s')
         self.assertEqual(remove_punctuation('abcd123@email.com'), 'abcd123emailcom')
-        self.assertEqual(remove_punctuation('I\'ve been on the low, I been taking my time'), 'I\'ve been on the low I been taking my time')
-        self.assertEqual(remove_punctuation('I\'ve been !on" t;:he lo@?<.>w, I been tak[]ing m%$y ti-me'), 'I\'ve been on the low I been taking my time')
+        self.assertEqual(remove_punctuation('I\'ve been on the low, I been taking my time'),
+                         'I\'ve been on the low I been taking my time')
+        self.assertEqual(remove_punctuation('I\'ve been !on" t;:he lo@?<.>w, I been tak[]ing m%$y ti-me'),
+                         'I\'ve been on the low I been taking my time')
 
     def test_remove_headers_from_lyrics(self):
         lyrics = "[Pre-Chorus: Logic]\nI've been on the low, I been taking my time\nI feel like I'm out of my mind\nIt feel like my life ain't mine (Who can relate? Woo)\nI've been on the low, I been taking my time\nI feel like I'm out of my mind\nIt feel like my life ain't mine\n\n[Chorus: Logic]\nI don't wanna be alive, I don't wanna be alive"
-        self.assertEqual(remove_headers_from_lyrics(lyrics), "\nI've been on the low, I been taking my time\nI feel like I'm out of my mind\nIt feel like my life ain't mine (Who can relate? Woo)\nI've been on the low, I been taking my time\nI feel like I'm out of my mind\nIt feel like my life ain't mine\n\n\nI don't wanna be alive, I don't wanna be alive")
-        self.assertEqual(remove_headers_from_lyrics('[Chorus]Lyrics1\n[Verse 1]Lyrics2\n[Outro]Goodbye World!'), 'Lyrics1\nLyrics2\nGoodbye World!')
+        self.assertEqual(remove_headers_from_lyrics(lyrics),
+                         "\nI've been on the low, I been taking my time\nI feel like I'm out of my mind\nIt feel like my life ain't mine (Who can relate? Woo)\nI've been on the low, I been taking my time\nI feel like I'm out of my mind\nIt feel like my life ain't mine\n\n\nI don't wanna be alive, I don't wanna be alive")
+        self.assertEqual(remove_headers_from_lyrics('[Chorus]Lyrics1\n[Verse 1]Lyrics2\n[Outro]Goodbye World!'),
+                         'Lyrics1\nLyrics2\nGoodbye World!')
         lyrics = ""
         self.assertEqual(remove_headers_from_lyrics(lyrics), "")
 
     def test_get_only_artist_lyrics_in_song(self):
-        self.assertEqual(get_only_artist_lyrics_in_song(data, 0, 'Khalid'), '\nPain don\'t hurt the same, I know\nThe lane I travel feels alone\nBut I\'m moving \'til my legs give out\nAnd I see my tears melt in the snow\nBut I don\'t wanna cry, I don\'t wanna cry anymore\nI wanna feel alive, I don\'t even wanna die anymore\nOh, I don\'t wanna\nI don\'t wanna\nI don\'t even wanna die anymore')
+        self.assertEqual(get_only_artist_lyrics_in_song(data, 0, 'Khalid'),
+                         '\nPain don\'t hurt the same, I know\nThe lane I travel feels alone\nBut I\'m moving \'til my legs give out\nAnd I see my tears melt in the snow\nBut I don\'t wanna cry, I don\'t wanna cry anymore\nI wanna feel alive, I don\'t even wanna die anymore\nOh, I don\'t wanna\nI don\'t wanna\nI don\'t even wanna die anymore')
         self.assertEqual(get_only_artist_lyrics_in_song(data, 0, 'Eminem'), '')
         self.assertEqual(get_only_artist_lyrics_in_song(data, -1, 'Khalid'), '')
 
@@ -165,10 +172,10 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertEqual(is_valid_indices_list(data, [0, 12, 147, 20, 71]), True)
 
     def test_is_valid_list_out_of_index_int_values(self):
-        self.assertEqual(is_valid_indices_list(data, [-1,148]), False)
+        self.assertEqual(is_valid_indices_list(data, [-1, 148]), False)
 
     def test_is_valid_list_mixed_values_in_range_and_out_of_range(self):
-        self.assertEqual(is_valid_indices_list(data, [-1,0, 1, 2, 3, 147, 148]), False)
+        self.assertEqual(is_valid_indices_list(data, [-1, 0, 1, 2, 3, 147, 148]), False)
 
     def test_is_valid_list_empty_list(self):
         self.assertEqual(is_valid_indices_list(data, []), True)
@@ -188,11 +195,11 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertEqual(find_total_words_in_song_by_artist(data, 0, 'Khalid'), 63)
         self.assertEqual(find_total_words_in_song_by_artist(data, 1, 'Khalid'), 266)
 
-    def test_find_total_unqiue_words_in_song(self):
+    def test_find_total_unique_words_in_song(self):
         self.assertEqual(find_total_unique_words_in_song(data, 0), 151)
         self.assertEqual(find_total_unique_words_in_song(data, 1), 72)
 
-    def test_find_total_unqiue_words_in_song_by_artist(self):
+    def test_find_total_unique_words_in_song_by_artist(self):
         self.assertEqual(find_total_unique_words_in_song_by_artist(data, 0, 'Khalid'), 33)
         self.assertEqual(find_total_unique_words_in_song_by_artist(data, 1, 'Khalid'), 72)
 
@@ -204,6 +211,7 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertEqual(find_uniqueness_percent_of_song_by_artist(data, 0, 'Khalid'), 52.3810)
         self.assertEqual(find_uniqueness_percent_of_song_by_artist(data, 1, 'Khalid'), 27.0677)
 
+
 class TestCSVFunctions(unittest.TestCase):
     # TODO
     def test_write_counter_to_csv(self):
@@ -211,6 +219,7 @@ class TestCSVFunctions(unittest.TestCase):
 
     def test_write_dict_to_csv(self):
         self.assertEqual(True, True)
+
 
 class TestKeywordFunctions(unittest.TestCase):
 
@@ -240,18 +249,20 @@ class TestKeywordFunctions(unittest.TestCase):
         self.assertEqual(find_keyword_count_in_all_songs_by_artist(data, 'alive', [0], 'Khalid'), 49)
 
     def test_find_keyword_counts_in_song(self):
-        self.assertEqual(find_keyword_counts_in_song(data, ['alive', 'love', 'salmon'], 0), [('alive', 13), ('love', 0), ('salmon', 0)])
-        self.assertEqual(find_keyword_counts_in_song(data, ['Alive', 'Love', 'Salmon'], 0), [('Alive', 13), ('Love', 0), ('Salmon', 0)])
+        self.assertEqual(find_keyword_counts_in_song(data, ['alive', 'love', 'salmon'], 0),
+                         [('alive', 13), ('love', 0), ('salmon', 0)])
+        self.assertEqual(find_keyword_counts_in_song(data, ['Alive', 'Love', 'Salmon'], 0),
+                         [('Alive', 13), ('Love', 0), ('Salmon', 0)])
+
+    def test_find_keyword_counts_in_song_by_artist(self):
+        self.assertEqual(find_keyword_counts_in_song_by_artist(data, ['life', 'love', 'salmon'], 1, "Khalid"),
+                         [('life', 1), ('love', 5), ('salmon', 0)])
 
     def test_find_keyword_counts_in_all_songs(self):
-        self.assertEqual(find_keyword_counts_in_all_songs(data, ['alive', 'love', 'salmon'], []), [('alive', 70), ('love', 611), ('salmon', 0)])
-        self.assertEqual(find_keyword_counts_in_all_songs(data, ['Alive', 'Love', 'Salmon'], []), [('Alive', 70), ('Love', 611), ('Salmon', 0)])
-
-    def test_find_pos_counts_in_song(self):
-        noun_counts = find_pos_counts_in_song(data, 0, "NOUN")
-        self.assertEqual(noun_counts.get('life'), 9)
-        self.assertEqual(noun_counts.most_common(5), [('life', 9), ('mind', 7), ('low', 6), ('time', 6), ('mine', 4)])
-        self.assertEqual(find_pos_counts_in_song(data, 0, 'noun'), Counter() )
+        self.assertEqual(find_keyword_counts_in_all_songs(data, ['alive', 'love', 'salmon'], []),
+                         [('alive', 70), ('love', 611), ('salmon', 0)])
+        self.assertEqual(find_keyword_counts_in_all_songs(data, ['Alive', 'Love', 'Salmon'], []),
+                         [('Alive', 70), ('Love', 611), ('Salmon', 0)])
 
     def test_find_noun_counts_in_all_songs(self):
         # TODO
@@ -269,6 +280,7 @@ class TestKeywordFunctions(unittest.TestCase):
         self.assertEqual(find_song_where_keyword_is_said_the_most(data, 'alive', []), [21, 'Keep Me'])
         self.assertEqual(find_song_where_keyword_is_said_the_most(data, 'salmon', []), [0, ''])
 
+
 class TestPhraseFunctions(unittest.TestCase):
 
     def test_find_phrase_count_in_song(self):
@@ -281,7 +293,8 @@ class TestPhraseFunctions(unittest.TestCase):
         self.assertEqual(find_phrase_count_in_all_songs(data, 'my time', [0]), 10)
 
     def test_find_phrase_counts_in_song(self):
-        self.assertEqual(find_phrase_counts_in_song(data, ['my time','on the low', 'who can relate'] , 0), [('my time', 6), ('on the low', 6), ('who can relate', 3)])
+        self.assertEqual(find_phrase_counts_in_song(data, ['my time', 'on the low', 'who can relate'], 0),
+                         [('my time', 6), ('on the low', 6), ('who can relate', 3)])
 
     def test_find_song_where_phrase_is_said_the_most(self):
         self.assertEqual(find_song_where_phrase_is_said_the_most(data, 'i love you', []), [2, 'I Be On The Way'])
@@ -297,6 +310,7 @@ class TestPhraseFunctions(unittest.TestCase):
     def test_find_most_repeated_phrases_of_any_length_in_song(self):
         x = find_most_repeated_phrases_of_any_length_in_song(data, 0)
         self.assertEqual(x.most_common(1), [('i', 50)])
+
 
 if __name__ == '__main__':
     unittest.main()
