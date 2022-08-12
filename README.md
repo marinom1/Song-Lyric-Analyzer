@@ -18,14 +18,10 @@ Music has been a part of human history for thousands of years. With Song-Lyric-A
 
 ## Getting Started
 ### Installation and Setup
-ToDo
-### Run
-ToDo
-
-## Screenshots
-![image](https://user-images.githubusercontent.com/20889773/115944784-f2708c80-a485-11eb-8907-55460fd950ce.png)
-![image](https://user-images.githubusercontent.com/20889773/115944801-12a04b80-a486-11eb-9240-570a162b068b.png)
-
+- Git clone this repo
+- Install the python package "spacy"
+### Quick Run
+Run the Sample_Analysis.py file to see some quick facts about singer Khalid's song "Young Dumb & Broke"
 
 ## Demo video
 ToDo
