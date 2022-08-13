@@ -158,20 +158,20 @@ def remove_punctuation(string):
 
 def remove_unneeded_headers_and_footers(lyrics):
     """
-        Gets lyrics without the unnessarry "[Song Name] Lyrics" at the start and the [number]Embed at the end.
-        This has only started popping up in retrieved lyrics recently and hopefully will be fixed by LyricsGenius
-        soon.
+    Gets lyrics without the unnessarry "[Song Name] Lyrics" at the start and the [number]Embed at the end.
+    This has only started popping up in retrieved lyrics recently and hopefully will be fixed by LyricsGenius
+    soon.
 
-        Parameters
-        -------
-        lyrics : str
-            the string that needs headers removed from
+    Parameters
+    -------
+    lyrics : str
+        the string that needs headers removed from
 
-        Returns
-        -------
-        string
-            the string without the unnecessary headers and footers
-        """
+    Returns
+    -------
+    string
+        the string without the unnecessary headers and footers
+    """
 
     # Remove header first
     if " Lyrics[" in lyrics:
@@ -457,15 +457,18 @@ def find_uniqueness_percent_of_song_by_artist(data, song_index, artist_name):
 
 
 def get_spacy_nlp_object(text):
-    """ TODO
+    """
     Uses spacy to process a string. The processed object contains information including tokenized components, part of
     speech tagging, etc. Returns the spacy object
+
     Parameters
     ----------
-    text
+    text : str
+        the text we will be processing
 
     Returns
     -------
+    doc
 
     """
     import spacy
@@ -572,7 +575,6 @@ def find_keyword_count_in_all_songs(data, keyword, bad_song_indices):
         if i in set(bad_song_indices):
             continue
         keyword_count = keyword_count + find_keyword_count_in_song(data, keyword, i)
-    # print("The total number of times", keyword, "is said in every song is: ", keyword_count, "\n")
     return keyword_count
 
 
@@ -814,7 +816,9 @@ def find_pos_counts_in_song(data, song_index, pos):
     """
     if pos not in {'ADJ', 'ADP', 'ADV', 'AUX', 'CONJ', 'CCONJ', 'DET', 'INTJ', 'NOUN', 'NUM', 'PART', 'PRON', 'PROPN',
                    'PUNCT', 'SCONJ', 'SCONJ', 'SYM', 'VERB', 'X', 'SPACE'}:
-        print("\"", pos, "\" is not a valid pos tag. Please enter a valid pos tag")
+        print("\"" + pos + "\" is not a valid pos tag. Please enter a valid pos tag. Valid tags are: ")
+        print('ADJ', 'ADP', 'ADV', 'AUX', 'CONJ', 'CCONJ', 'DET', 'INTJ', 'NOUN', 'NUM', 'PART', 'PRON', 'PROPN',
+              'PUNCT', 'SCONJ', 'SCONJ', 'SYM', 'VERB', 'X', 'SPACE')
         return Counter()
     lyrics = data['songs'][song_index]['lyrics']
     lyrics = remove_headers_from_lyrics(lyrics)
@@ -1082,16 +1086,19 @@ def find_phrase_count_in_song_by_artist(data, phrase, song_index, artist_name):
 # Find the Song Where a Keyword or Phrase is said the most
 def find_song_where_keyword_is_said_the_most(data, keyword, bad_song_indices):
     """
-    TODO
     Parameters
     ----------
-    data
-    keyword
-    bad_song_indices
+    data : json
+        the json where the Genius data is stored in
+    keyword : str
+        keyword to check in each song
+    bad_song_indices : list
+        list of song indices we don't want to work with
 
     Returns
     -------
-
+    list
+        index 0 contains the number of times the keyword is said in the song, index 1 contains the song name
     """
 
     if not is_valid_indices_list(data, bad_song_indices):
@@ -1103,6 +1110,8 @@ def find_song_where_keyword_is_said_the_most(data, keyword, bad_song_indices):
                 print('[' + str(i) + ']', bad_song_indices[i])
         return ''
 
+    there_is_a_tie = False
+    list_of_ties = []
     highest_count = find_keyword_count_in_song(data, keyword, 0)
     title_of_highest_count = ''
     for i in range(len(data['songs'])):  # Loop through all the songs
@@ -1113,11 +1122,18 @@ def find_song_where_keyword_is_said_the_most(data, keyword, bad_song_indices):
         if current_count > highest_count:
             highest_count = current_count
             title_of_highest_count = data['songs'][i]['title']
+            there_is_a_tie = False
+            list_of_ties = []
         elif current_count == highest_count:
-            # TODO
+            there_is_a_tie = True
+            list_of_ties.append(data['songs'][i]['title'])
             pass
 
     list_of_info = [highest_count, title_of_highest_count]
+
+    if there_is_a_tie:
+        print("There is at least 1 other song where \""+keyword+"\" appears the same amount of times")
+        print("list of ties:", list_of_ties)
 
     return list_of_info
 
@@ -1178,7 +1194,6 @@ def find_all_word_counts_in_song(data, song_index, convert_to_list=False, counts
         lyrics = remove_punctuation(lyrics)
         lyrics = lyrics.split()
         counts = counts + Counter(lyrics)
-        # print(counts)
 
     if convert_to_list:
         print("returning list here")
@@ -1470,15 +1485,20 @@ def get_two_word_phrases_in_song_with_duplicates(data, song_index):
 def find_all_two_word_phrase_counts_in_song(data, song_index, counts):
     """
     Count number of times every two word phrase occurs in the song
+
     Parameters
     ----------
-    data
-    song_index
-    counts
+    data : json
+        json with song info
+    song_index : int
+        index of song to check from json
+    counts : Counter
+        Counter object of all two word phrase counts in the song
 
     Returns
     -------
-
+    counts : Counter
+        Counter object of all two word phrase counts in the song
     """
     list_of_phrases = get_two_word_phrases_in_song_with_duplicates(data, song_index)
 
@@ -1487,9 +1507,20 @@ def find_all_two_word_phrase_counts_in_song(data, song_index, counts):
 
 
 def get_list_of_most_common_two_word_phrases_in_all_songs(data, bad_song_indices):
-    # TODO: Update doc string
     """
     Returns list of every song's unique two word phrases. Duplicates mean the phrase is in more than 1 song
+
+    Parameters
+    -------
+    data : json
+        the json where the Genius data is stored in
+    bad_song_indices : list
+        list of song indices to ignore in the counts
+
+    Returns
+    -------
+    counts : Counter
+        Counter object of all two word phrases in the songs
     """
 
     initial_song = 0
@@ -1506,21 +1537,25 @@ def get_list_of_most_common_two_word_phrases_in_all_songs(data, bad_song_indices
             song_count = song_count + 1
             current_song = get_two_word_phrases_in_song(data, i)
             cumulative_list_of_phrases.extend(current_song)
-    z = Counter(cumulative_list_of_phrases)
-    return z
+    counts = Counter(cumulative_list_of_phrases)
+    return counts
 
 
 def find_most_repeated_phrases_of_any_length_in_song(data, song_index):
     """
     Will scan through a song's lyrics and try to find the most repeated phrases.
+
     Parameters
     ----------
-    data
-    song_index
+    data : json
+        json with song info
+    song_index : int
+        the song index of the song we want to find the repeated phrases for
 
     Returns
     -------
-
+    phrase_counts : Counter
+        Counter object of all phrases of any length in the song
     """
     lyrics = data['songs'][song_index]['lyrics']
     lyrics = remove_headers_from_lyrics(lyrics)
@@ -1553,15 +1588,18 @@ def find_most_repeated_phrases_of_any_length_in_song(data, song_index):
 def get_list_of_artists_in_song(data, song_index):
     """
     Returns a list of all the artists on the song
+
     Parameters
     ----------
-    data
-    song_index
+    data : json
+        the json where the Genius data is stored in
+    song_index : int
+        the song index of the song we want to find artists for
 
     Returns
     -------
     list
-        list of all songs in data
+        list of all artists in the song
     """
     # First add the name of the JSON artist
     list_of_artists = [data['name']]
@@ -1634,14 +1672,17 @@ def analyze_song(data, song_index):
     -
     Parameters
     ----------
-    data
-    song_index
+    data : json
+        the json where the Genius data is stored in
+    song_index : int
+        the song index of the song we want to find noun counts for
 
     Returns
     -------
     list
         list containing all the information about the song
     """
+
     song_info = [data["songs"][song_index]["title"], data["songs"][song_index]["artist"]]
 
     list_of_artists = []
