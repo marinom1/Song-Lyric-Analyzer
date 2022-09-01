@@ -24,6 +24,7 @@ def print_all_songs_from_json(data):
     for i in range(len(data['songs'])):
         print(i, data['songs'][i]['title'])
         list_of_songs.append(data['songs'][i]['title'].replace('\u200b', ''))
+    print()
     return list_of_songs
 
 
@@ -509,7 +510,7 @@ def write_counter_to_custom_csv(counts, output_file_name):
 # Find Frequency of keyword in one or all songs
 def find_keyword_count_in_song(data, keyword, song_index):
     """
-    Will check one song to see how many times the keyword occursT
+    Will check one song to see how many times the keyword occurs in given song
 
     Parameters
     -------
@@ -1076,7 +1077,6 @@ def find_phrase_count_in_song_by_artist(data, phrase, song_index, artist_name):
     if string_of_words is not None:
         string_of_words = string_of_words.lower()
         string_of_words = remove_punctuation(string_of_words)
-        print(song_index, "Currently looking at: ", data['songs'][song_index]['title'])
         list_of_matches = re.findall(r'\b' + phrase + r'\b', string_of_words)
         phrase_count = len(list_of_matches)
 
@@ -1113,7 +1113,10 @@ def find_song_where_keyword_is_said_the_most(data, keyword, bad_song_indices):
     there_is_a_tie = False
     list_of_ties = []
     highest_count = find_keyword_count_in_song(data, keyword, 0)
-    title_of_highest_count = ''
+    if highest_count != 0:
+        title_of_highest_count = data['songs'][0]['title']
+    else:
+        title_of_highest_count = ''
     for i in range(len(data['songs'])):  # Loop through all the songs
         # if current song is an empty string, don't bother trying to analyze the song and continue to next song
         if i in set(bad_song_indices):
@@ -1121,12 +1124,12 @@ def find_song_where_keyword_is_said_the_most(data, keyword, bad_song_indices):
         current_count = find_keyword_count_in_song(data, keyword, i)
         if current_count > highest_count:
             highest_count = current_count
-            title_of_highest_count = data['songs'][i]['title']
+            title_of_highest_count = data['songs'][i]['title'].replace('\u200b', '')
             there_is_a_tie = False
             list_of_ties = []
         elif current_count == highest_count:
             there_is_a_tie = True
-            list_of_ties.append(data['songs'][i]['title'])
+            list_of_ties.append(data['songs'][i]['title'].replace('\u200b', ''))
             pass
 
     list_of_info = [highest_count, title_of_highest_count]
@@ -1149,7 +1152,10 @@ def find_song_where_phrase_is_said_the_most(data, phrase, bad_song_indices):
         return ''
 
     highest_count = find_keyword_count_in_song(data, phrase, 0)
-    title_of_highest_count = ''
+    if highest_count != 0:
+        title_of_highest_count = data['songs'][0]['title']
+    else:
+        title_of_highest_count = ''
     for i in range(len(data['songs'])):  # Loop through all the songs
         # if current song is an empty string, don't bother trying to analyze the song and continue to next song
         if i in set(bad_song_indices):
@@ -1157,7 +1163,7 @@ def find_song_where_phrase_is_said_the_most(data, phrase, bad_song_indices):
         current_count = find_phrase_count_in_song(data, phrase, i)
         if current_count > highest_count:
             highest_count = current_count
-            title_of_highest_count = data['songs'][i]['title']
+            title_of_highest_count = data['songs'][i]['title'].replace('\u200b', '')
 
     list_of_info = [highest_count, title_of_highest_count]
 
@@ -1196,8 +1202,7 @@ def find_all_word_counts_in_song(data, song_index, convert_to_list=False, counts
         counts = counts + Counter(lyrics)
 
     if convert_to_list:
-        print("returning list here")
-        return list(counts)
+        return list(counts.items())
     return counts
 
 
@@ -1291,7 +1296,7 @@ def get_list_of_songs_with_keyword(data, keyword, bad_song_indices):
         if i in set(bad_song_indices):
             continue
         if find_keyword_count_in_song(data, keyword, i) > 0:
-            list_of_songs.append(data['songs'][i]['title'])
+            list_of_songs.append(data['songs'][i]['title'].replace('\u200b', ''))
 
     return list_of_songs
 
@@ -1579,7 +1584,6 @@ def find_most_repeated_phrases_of_any_length_in_song(data, song_index):
             list_of_all_phrases.append(current_phrase)
             first_word_index = first_word_index + 1
             last_word_index = last_word_index + 1
-    print(list_of_all_phrases)
     phrases_counts = Counter(list_of_all_phrases)
 
     return phrases_counts
@@ -1664,8 +1668,8 @@ def analyze_song(data, song_index):
     - Uniqueness percent of song
     - 5 Most Repeated Words In The Song
     - 5 Most Repeated Nouns In The Song
-    - 5 Most Repeated Adjectives In The Song TODO
-    - 5 Most Repeated Adverbs In The Song TODO
+    - 5 Most Repeated Adjectives In The Song
+    - 5 Most Repeated Adverbs In The Song
     - 5 Most repeated 2 word phrases in the song
 
     - TODO Sentiment analysis ?
@@ -1714,8 +1718,8 @@ def analyze_song(data, song_index):
     print("5 Most Repeated Adjectives In The Song:", song_info[8])
     print("5 Most Repeated Adverbs In The Song:", song_info[9])
     print("5 Most Repeated 2-Word Phrases In The Song:", song_info[10])
+    print()
 
-    print("\n")
     return song_info
 
 
@@ -1754,3 +1758,155 @@ def load_existing_presets():
         loaded_presets = {}
 
     return there_are_existing_presets, loaded_presets
+
+
+# Currently unorganized functions
+
+def perform_sentiment_analysis_on_song(data, song_index):
+    """
+    Parameters
+    ----------
+    data : json
+        the json where the Genius data is stored in
+    song_index : str
+        the song index in data to perform sentiment analysis on
+
+    Returns
+    -------
+    TODO
+        TODO
+    """
+
+
+    lyrics = data['songs'][song_index]['lyrics']
+
+
+
+    return True
+
+
+def find_substring_count_in_song(data, substring, song_index):
+    """
+    Will check one song to see how many times the substring occurs in given song
+
+    Parameters
+    -------
+    data : json
+        json with song info
+    substring : str
+        substring to check in each song
+    song_index : int
+        index of song to check from json
+
+    Returns
+    -------
+    int
+        an int with how often the substring appears in the song
+    """
+    substring = substring.lower()
+    lyrics = data['songs'][song_index]['lyrics']
+    lyrics = remove_headers_from_lyrics(lyrics)
+    if lyrics is not None:
+        lyrics = lyrics.lower()
+        lyrics = remove_punctuation(lyrics)
+        lyrics = lyrics.replace('\u200b', '')  # Catch weird bug where \u200b was showing up in some keywords
+
+    return lyrics.count(substring)
+
+
+def find_substring_count_in_all_songs(data, substring, bad_song_indices):
+    """
+    Will go through the entire list of songs (in data) and count how many times the substring appears in total
+
+    Parameters
+    -------
+    data : json
+        json with song info
+    substring : str
+        the substring to count in all the songs in data
+    bad_song_indices : list
+        list of song indices to print their titles
+
+    Returns
+    -------
+    int
+        returns an int with the number of occurences the keyword appears in all songs
+    """
+
+    if not is_valid_indices_list(data, bad_song_indices):
+        print("Invalid Values in bad_song_indices, please remove them:\n")
+        for i in range(len(bad_song_indices)):
+            if not isinstance(bad_song_indices[i], int):
+                print('[' + str(i) + ']', bad_song_indices[i])
+            elif bad_song_indices[i] < 0 or bad_song_indices[i] > len(data['songs']) - 1:
+                print('[' + str(i) + ']', bad_song_indices[i])
+        return 0
+
+    substring = substring.lower()
+    substring_count = 0
+    for i in range(len(data['songs'])):  # Loop through every song in data
+        # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):
+            continue
+        substring_count = substring_count + find_substring_count_in_song(data, substring, i)
+    return substring_count
+
+
+def find_song_where_substring_is_said_the_most(data, substring, bad_song_indices):
+    """
+    Parameters
+    ----------
+    data : json
+        the json where the Genius data is stored in
+    substring : str
+        substring to check in each song
+    bad_song_indices : list
+        list of song indices we don't want to work with
+
+    Returns
+    -------
+    list
+        index 0 contains the number of times the keyword is said in the song, index 1 contains the song name
+    """
+
+    if not is_valid_indices_list(data, bad_song_indices):
+        print("Invalid Values in bad_song_indices, please remove them:\n")
+        for i in range(len(bad_song_indices)):
+            if not isinstance(bad_song_indices[i], int):
+                print('[' + str(i) + ']', bad_song_indices[i])
+            elif bad_song_indices[i] < 0 or bad_song_indices[i] > len(data['songs']) - 1:
+                print('[' + str(i) + ']', bad_song_indices[i])
+        return ''
+
+    there_is_a_tie = False
+    list_of_ties = []
+    highest_count = 0
+    title_of_highest_count = ''
+    for i in range(len(data['songs'])):  # Loop through all the songs
+        # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):
+            continue
+        current_count = find_substring_count_in_song(data, substring, i)
+        if current_count > highest_count:
+            highest_count = current_count
+            title_of_highest_count = data['songs'][i]['title'].replace('\u200b', '')
+            there_is_a_tie = False
+            list_of_ties = []
+        elif current_count == highest_count:
+            there_is_a_tie = True
+            list_of_ties.append(data['songs'][i]['title'].replace('\u200b', ''))
+            pass
+
+    list_of_info = [highest_count, title_of_highest_count]
+    return list_of_info
+
+
+
+
+
+
+
+
+
+
+
