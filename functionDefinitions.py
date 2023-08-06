@@ -24,7 +24,6 @@ def print_all_songs_from_json(data):
     for i in range(len(data['songs'])):
         print(i, data['songs'][i]['title'])
         list_of_songs.append(data['songs'][i]['title'].replace('\u200b', ''))
-    print()
     return list_of_songs
 
 
@@ -244,6 +243,7 @@ def get_only_artist_lyrics_in_song(data, song_index, artist_name):
     lyrics_only_from_artist = ''
     index_pointer = 0
     original_lyrics = data['songs'][song_index]['lyrics']
+
     # If there are no other features on the song, headers will not say artist name
     if ': ' + artist_name not in original_lyrics:
         # If artist name does not match Genius song owner, return error because user inputted an invalid artist name
@@ -261,7 +261,9 @@ def get_only_artist_lyrics_in_song(data, song_index, artist_name):
                 print("Invalid song_index")
                 pass
             else:
-                print("Invalid artist name inputted by user")
+                print("Invalid artist name inputted by user (The artist might not have lyrics on the song)")
+                print("Song name:", data['songs'][song_index]['title'])
+                print("Song alleged artist:", data['songs'][song_index]['artist'])
                 pass
 
     else:  # The song has 1 or more features
@@ -1899,14 +1901,3 @@ def find_song_where_substring_is_said_the_most(data, substring, bad_song_indices
 
     list_of_info = [highest_count, title_of_highest_count]
     return list_of_info
-
-
-
-
-
-
-
-
-
-
-
