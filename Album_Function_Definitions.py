@@ -1,4 +1,4 @@
-from functionDefinitions import remove_headers_from_lyrics, remove_punctuation
+from song_function_definitions import remove_headers_from_lyrics, remove_punctuation
 from collections import Counter
 
 
@@ -125,7 +125,23 @@ def find_keyword_count_in_all_songs_in_album(data, keyword, bad_song_indices):
 
 
 def find_all_word_counts_in_all_songs_in_album(data, cumulative_counts, bad_song_indices):
-    """Counts how often every word occurs cumulatively in every song in data"""
+    """
+    Counts how often every word occurs cumulatively in every song in data
+
+    Parameters
+    -------
+    data : json
+        json with song info
+    cumulative_counts : Counter
+        the word to count in all the songs in data
+    bad_song_indices : list
+        list of song indices we don't want to work with
+
+    Returns
+    -------
+    Counter
+        Counter Object that will hold every word and how often it occurs
+    """
 
     if not is_valid_indices_list_album(data, bad_song_indices):
         print("Invalid Values in bad_song_indices, please remove them:\n")
@@ -158,7 +174,7 @@ def find_all_word_counts_in_all_songs_in_album(data, cumulative_counts, bad_song
 
 def find_all_word_counts_in_song_in_album(data, song_index, convert_to_list=False, counts=Counter()):
     """
-    Counts how often every word occurs in a song
+    Counts how often every word occurs in a song in an album
 
     Parameters
     -------
@@ -173,8 +189,8 @@ def find_all_word_counts_in_song_in_album(data, song_index, convert_to_list=Fals
 
     Returns
     -------
-    counts : Counter or List
-        Counter Object or list (depending on convert_to_list) that will hold every word and how often it occurs
+    Counter
+        Counter Object that will hold every word and how often it occurs
     """
     if counts is None:
         counts = Counter()

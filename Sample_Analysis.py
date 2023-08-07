@@ -1,5 +1,5 @@
 import json
-from functionDefinitions import *
+from song_function_definitions import *
 
 # Lyrics_Khalid_all.json was created as a result of using lyricsgenius search_artist function
 with open('Lyrics_Khalid_all.json') as json_file:
