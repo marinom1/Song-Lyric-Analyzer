@@ -5,7 +5,7 @@ from tkinter.filedialog import askopenfilename
 from tkinter import *
 import ntpath
 import json
-from functionDefinitions import *
+from song_function_definitions import *
 
 class SongLyricAnalyzer(tk.Tk):
     def __init__(self, *args, **kwargs):
