@@ -5,6 +5,7 @@ from collections import Counter
 from string_cleanup_functions import *
 import re
 
+#Functions to be used on a Genius artist object
 
 # Print Functions
 def print_all_songs_from_json(data):
