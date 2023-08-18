@@ -217,6 +217,7 @@ class TestCSVFunctions(unittest.TestCase):
     def test_write_counter_to_csv(self):
         self.assertEqual(True, True)
 
+    # TODO
     def test_write_dict_to_csv(self):
         self.assertEqual(True, True)
 
@@ -263,6 +264,10 @@ class TestKeywordFunctions(unittest.TestCase):
                          [('alive', 70), ('love', 611), ('salmon', 0)])
         self.assertEqual(find_keyword_counts_in_all_songs(data, ['Alive', 'Love', 'Salmon'], []),
                          [('Alive', 70), ('Love', 611), ('Salmon', 0)])
+
+    def test_find_keyword_counts_in_all_songs_by_artist(self):
+        # TODO
+        self.assertEqual(True, True)
 
     def test_find_noun_counts_in_all_songs(self):
         # TODO
