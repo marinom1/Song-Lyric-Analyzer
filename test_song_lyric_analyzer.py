@@ -285,6 +285,13 @@ class TestKeywordFunctions(unittest.TestCase):
         self.assertEqual(find_song_where_keyword_is_said_the_most(data, 'alive', []), [21, 'Keep Me'])
         self.assertEqual(find_song_where_keyword_is_said_the_most(data, 'salmon', []), [0, ''])
 
+    def test_get_list_of_lyric_lines_containing_keyword_in_song(self):
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'today'), ['i just wanna die today i just wanna die', "you don't gotta die today you don't gotta die", "i don't wanna die today i don't wanna die"])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'Today'), ['i just wanna die today i just wanna die', "you don't gotta die today you don't gotta die", "i don't wanna die today i don't wanna die"])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'computerrandomword'), [])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'pain'), ['pain don\'t hurt the same i know'])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'lover'), ['and it\'s the lightness in the air when you\'re there chesttochest with a lover'])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'i'), [])
 
 class TestPhraseFunctions(unittest.TestCase):
 
