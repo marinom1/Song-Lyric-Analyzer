@@ -24,33 +24,6 @@ def print_all_songs_in_album_from_json(data):
     return list_of_songs
 
 
-def is_valid_indices_list_album(data, list_of_indices):
-    """
-    Checks if a list of indices contains only valid index values. A list is valid only if it contains indices
-    between 0 and the number of songs in data - 1. Negative numbers, indices out of range, strings, lists, etc. are all
-    invalid values to be inside of list_of_indices and will make function return false.
-
-    Parameters
-    -------
-    data : json
-        the json where the Genius data is stored in
-    list_of_indices : list
-        the list of indices to check
-    Returns
-    -------
-    bool
-        True if list contains valid indices (or is empty), false if list contains invalid value(s)
-    """
-    if not all(
-            isinstance(x, int) for x in list_of_indices):  # if bad_song_indices has invalid value(s) e.g string, double
-        return False
-    # Check if indices are in valid range
-    max_index = len(data['tracks']) - 1
-    for index in list_of_indices:
-        if index < 0 or index > max_index:
-            return False
-    return True
-
 
 # Find Frequency of keyword in one or all songs
 def find_keyword_count_in_song_in_album(data, keyword, song_index):
