@@ -297,6 +297,13 @@ class TestKeywordFunctions(unittest.TestCase):
     def test_get_list_of_lyric_lines_containing_keyword_in_all_songs(self):
         self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_all_songs(data, 'wind', []), ['wind it up slow for me pick it up pick it up', 'wind it up slow for me pick it up pick it up', 'wind it up slow for me pick it up pick it up', 'wind it up slow for me pick it up pick it up', 'traveling where the wind will take us', 'traveling where the wind will take us'])
 
+    def test_get_list_of_lyric_lines_containing_keyword_in_song_by_artist(self):
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song_by_artist(data, 0, "i", "Khalid"), ["pain don't hurt the same i know", 'the lane i travel feels alone', 'and i see my tears melt in the snow', "but i don't wanna cry i don't wanna cry anymore", "i wanna feel alive i don't even wanna die anymore", "oh i don't wanna", "i don't wanna", "i don't even wanna die anymore"])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song_by_artist(data, 0, "i", "Alessia Cara"), ["i know that you'll thank god you did"])
+
+    def test_get_list_of_lyric_lines_containing_keyword_in_all_songs_by_artist(self):
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_all_songs_by_artist(data, "underwater", [], "Alessia Cara"), ["it's the very first breath when your head's been drowning underwater", "when your head's been drowning underwater"])
+
 
 class TestPhraseFunctions(unittest.TestCase):
 
