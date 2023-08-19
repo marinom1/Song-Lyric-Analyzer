@@ -285,6 +285,18 @@ class TestKeywordFunctions(unittest.TestCase):
         self.assertEqual(find_song_where_keyword_is_said_the_most(data, 'alive', []), [21, 'Keep Me'])
         self.assertEqual(find_song_where_keyword_is_said_the_most(data, 'salmon', []), [0, ''])
 
+    def test_get_list_of_lyric_lines_containing_keyword_in_song(self):
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'today'), ['i just wanna die today i just wanna die', "you don't gotta die today you don't gotta die", "i don't wanna die today i don't wanna die"])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'Today'), ['i just wanna die today i just wanna die', "you don't gotta die today you don't gotta die", "i don't wanna die today i don't wanna die"])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'computerrandomword'), [])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'pain'), ['pain don\'t hurt the same i know'])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'lover'), ['and it\'s the lightness in the air when you\'re there chesttochest with a lover'])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, 'i'), ["i've been on the low i been taking my time", "i feel like i'm out of my mind", "i've been on the low i been taking my time", "i feel like i'm out of my mind", "i don't wanna be alive i don't wanna be alive", 'i just wanna die today i just wanna die', "i don't wanna be alive i don't wanna be alive", 'i just wanna die', "and my life don't even matter i know it i know it", "i know i'm hurting deep down but can't show it", 'i never had a place to call my own', "i never had a home ain't nobody callin' my phone", "i've been on the low i been taking my time", "i feel like i'm out of my mind", "i've been on the low i been taking my time", "i feel like i'm out of my mind", 'i want you to be alive i want you to be alive', 'i want you to be alive i want you to be alive', "i know that you'll thank god you did", "i know where you been where you are where you goin'", "i know you're the reason i believe in life", "i've been on the low i been taking my time", "i feel like i'm out of my mind", "i've been on the low i been taking my time", "i feel like i'm out of my mind", 'i finally wanna be alive i finally wanna be alive', "i don't wanna die today i don't wanna die", 'i finally wanna be alive i finally wanna be alive', "i don't wanna die i don't wanna die", "pain don't hurt the same i know", 'the lane i travel feels alone', 'and i see my tears melt in the snow', "but i don't wanna cry i don't wanna cry anymore", "i wanna feel alive i don't even wanna die anymore", "oh i don't wanna", "i don't wanna", "i don't even wanna die anymore"])
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_song(data, 0, '\n'), [])
+
+    def test_get_list_of_lyric_lines_containing_keyword_in_all_songs(self):
+        self.assertEqual(get_list_of_lyric_lines_containing_keyword_in_all_songs(data, 'wind', []), ['wind it up slow for me pick it up pick it up', 'wind it up slow for me pick it up pick it up', 'wind it up slow for me pick it up pick it up', 'wind it up slow for me pick it up pick it up', 'traveling where the wind will take us', 'traveling where the wind will take us'])
+
 
 class TestPhraseFunctions(unittest.TestCase):
 
