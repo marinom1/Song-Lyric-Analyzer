@@ -1763,9 +1763,9 @@ def get_list_of_lyric_lines_containing_keyword_in_song(data, song_index, keyword
 
             # Check if the char right before or right after are non-space chars, if either are non-space chars it's not
             # the keyword but rather a substring of a longer word, EXCEPT if it is a \n
-            if ("\\n" in lyrics[index_of_first_letter - 2: index_of_first_letter]):
+            if "\\n" in lyrics[index_of_first_letter - 2: index_of_first_letter]:
                 # now make sure the char after the last char is a \n
-                if (" " in lyrics[index_of_last_letter+1:index_of_last_letter+2]):
+                if " " in lyrics[index_of_last_letter + 1:index_of_last_letter + 2]:
                     # Find the first \n going backwards
                     first_line_letter_index = lyrics.rfind("\\n", 0, index_of_first_letter) + 2
 
@@ -1780,7 +1780,7 @@ def get_list_of_lyric_lines_containing_keyword_in_song(data, song_index, keyword
                     current_index = last_line_letter_index
                     continue
 
-            if ("\\n" == lyrics[index_of_last_letter + 1:index_of_last_letter + 3]):
+            if "\\n" == lyrics[index_of_last_letter + 1:index_of_last_letter + 3]:
                 first_line_letter_index = lyrics.rfind("\\n", 0, index_of_first_letter) + 2
 
                 # Find first \n going forwards
@@ -1812,6 +1812,7 @@ def get_list_of_lyric_lines_containing_keyword_in_song(data, song_index, keyword
             current_index = last_line_letter_index
 
     return list_of_lines_containing_keyword
+
 
 def get_list_of_lyric_lines_containing_keyword_in_all_songs(data, keyword, bad_song_indices):
     """
@@ -1848,6 +1849,144 @@ def get_list_of_lyric_lines_containing_keyword_in_all_songs(data, keyword, bad_s
         if i in set(bad_song_indices):
             continue
         x = get_list_of_lyric_lines_containing_keyword_in_song(data, i, keyword)
+        list_of_lines_containing_keyword = list_of_lines_containing_keyword + x
+
+    # remove empty lists from list
+    list_of_lines_containing_keyword = [ele for ele in list_of_lines_containing_keyword if ele != []]
+    return list_of_lines_containing_keyword
+
+
+def get_list_of_lyric_lines_containing_keyword_in_song_by_artist(data, song_index, keyword, artist_name):
+    """
+    Get a list of song lines that contain the given keyword by the artist. Will only add a line if the keyword is the
+    whole word and not if it is part of a bigger word (e.g "the" in "other" will not add the line to the list)
+
+    Parameters
+    ----------
+    data : json
+        the json where the Genius data is stored in
+    song_index : int
+        index of song to check from json
+    keyword : str
+        substring to check in each song
+    artist_name : str
+        name of artist to only check lyrics from
+
+    Returns
+    -------
+    list
+        list of lines in the song's lyrics containing the keyword by artist
+    """
+    list_of_lines_containing_keyword = []
+    keyword = keyword.lower()
+    lyrics = get_only_artist_lyrics_in_song(data, song_index, artist_name)
+    if lyrics is not None:
+        lyrics = lyrics.lower()
+        lyrics = remove_punctuation(lyrics)
+        lyrics = lyrics.replace('\u200b', '')  # Catch weird bug where \u200b was showing up in some keywords
+        lyrics = lyrics + "\n"  # add an extra \n to the end of the lyrics to aid in the next steps
+        lyrics = repr(lyrics)
+        current_index = 0
+
+        while True:
+            # Look for the first occurrence of the keyword
+            index_of_first_letter = lyrics.find(keyword, current_index)
+            # If .find returns -1, we found all occurences of the keyword already
+            if index_of_first_letter == -1:
+                break
+
+            index_of_last_letter = index_of_first_letter + len(keyword) - 1
+
+            # Check if the char right before or right after are non-space chars, if either are non-space chars it's not
+            # the keyword but rather a substring of a longer word, EXCEPT if it is a \n
+            if "\\n" in lyrics[index_of_first_letter - 2: index_of_first_letter]:
+                # now make sure the char after the last char is a \n
+                if " " in lyrics[index_of_last_letter + 1:index_of_last_letter + 2]:
+                    # Find the first \n going backwards
+                    first_line_letter_index = lyrics.rfind("\\n", 0, index_of_first_letter) + 2
+
+                    # Find first \n going forwards
+                    last_line_letter_index = lyrics.find("\\n", index_of_last_letter)
+
+                    # Get the substring in between the first and last index in the line
+                    line = lyrics[first_line_letter_index:last_line_letter_index]
+
+                    # Put it in the list
+                    list_of_lines_containing_keyword.append(line)
+                    current_index = last_line_letter_index
+                    continue
+
+            if "\\n" == lyrics[index_of_last_letter + 1:index_of_last_letter + 3]:
+                first_line_letter_index = lyrics.rfind("\\n", 0, index_of_first_letter) + 2
+
+                # Find first \n going forwards
+                last_line_letter_index = lyrics.find("\\n", index_of_last_letter)
+
+                # Get the substring in between the first and last index in the line
+                line = lyrics[first_line_letter_index:last_line_letter_index]
+
+                # Put it in the list
+                list_of_lines_containing_keyword.append(line)
+                current_index = last_line_letter_index
+                continue
+
+            if (not lyrics[index_of_first_letter - 1].isspace()) or (not lyrics[index_of_last_letter + 1].isspace()):
+                current_index = index_of_last_letter+1
+                continue
+
+            # Find the first \n going backwards
+            first_line_letter_index = lyrics.rfind("\\n", 0, index_of_first_letter) + 2
+
+            # Find first \n going forwards
+            last_line_letter_index = lyrics.find("\\n", index_of_last_letter)
+
+            # Get the substring in between the first and last index in the line
+            line = lyrics[first_line_letter_index:last_line_letter_index]
+
+            # Put it in the list
+            list_of_lines_containing_keyword.append(line)
+            current_index = last_line_letter_index
+
+    return list_of_lines_containing_keyword
+
+
+def get_list_of_lyric_lines_containing_keyword_in_all_songs_by_artist(data, keyword, bad_song_indices, artist_name):
+    """
+    Get a list of song lines that contain the given keyword in all songs. Will only add a line if the keyword is the
+    whole word and not if it is part of a bigger word (e.g "the" in "other" will not add the line to the list)
+
+    Parameters
+    ----------
+    data : json
+        the json where the Genius data is stored in
+    keyword : str
+        substring to check in each song
+    bad_song_indices : list
+        list of song indices to print their titles
+    artist_name : str
+        name of artist to only check lyrics from
+
+    Returns
+    -------
+    list
+        list of lines in all song's lyrics containing the keyword
+    """
+
+    list_of_lines_containing_keyword = []
+    if not is_valid_indices_list(data, bad_song_indices):
+        print("Invalid Values in bad_song_indices, please remove them:\n")
+        for i in range(len(bad_song_indices)):
+            if not isinstance(bad_song_indices[i], int):
+                print('[' + str(i) + ']', bad_song_indices[i])
+            elif bad_song_indices[i] < 0 or bad_song_indices[i] > len(data['songs']) - 1:
+                print('[' + str(i) + ']', bad_song_indices[i])
+        return []
+
+    for i in range(len(data['songs'])):  # loop through all the songs
+        # if current song is an empty string, don't bother trying to analyze the song and continue to next song
+        if i in set(bad_song_indices):
+            continue
+        x = get_list_of_lyric_lines_containing_keyword_in_song_by_artist(data, i, keyword, artist_name)
         list_of_lines_containing_keyword = list_of_lines_containing_keyword + x
 
     # remove empty lists from list
