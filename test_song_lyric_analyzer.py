@@ -267,9 +267,13 @@ class TestKeywordFunctions(unittest.TestCase):
 
     def test_find_keyword_counts_in_all_songs_by_artist(self):
         # TODO
-        self.assertEqual(True, True)
+        self.assertEqual(find_keyword_counts_in_all_songs_by_artist(data, ["snow", "more"], [], "Khalid"), [('snow', 2), ('more', 43)])
 
     def test_find_noun_counts_in_all_songs(self):
+        # TODO
+        self.assertEqual(True, True)
+
+    def test_find_noun_counts_in_all_songs_by_artist(self):
         # TODO
         self.assertEqual(True, True)
 
